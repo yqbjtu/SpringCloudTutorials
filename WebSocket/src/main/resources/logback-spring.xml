@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- ch.qos.logback.core.ConsoleAppender 控制台输出 -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%-5level] %d{HH:mm:ss.SSS} [%thread] %logger{36} - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <!-- ch.qos.logback.core.rolling.RollingFileAppender 文件日志输出 -->
+    <appender name="baselog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>log/base.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>log/base.%d.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy  class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>1 MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>
+                [%-5level] %d{HH:mm:ss.SSS} [%thread] %logger{36} - %msg%n
+            </pattern>
+            <charset>UTF-8</charset> <!-- 此处设置字符集 -->
+        </encoder>
+    </appender>
+    <!-- 日志级别 -->
+    <root>
+        <!-- 定义了ERROR和INFO级别的日志;分别在FILE文件和控制台输出 -->
+        <level value="info" />
+        <!--<appender-ref ref="baselog" />-->
+        <appender-ref ref="console" />
+    </root>
+    <logger name="com.yq" level="DEBUG">
+        <appender-ref ref="baselog" />
+    </logger>
+</configuration>

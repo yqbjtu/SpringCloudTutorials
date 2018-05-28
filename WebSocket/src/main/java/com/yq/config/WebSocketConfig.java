@@ -2,14 +2,13 @@ package com.yq.config;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.yq.WebSocketApplication;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -24,6 +23,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+//AbstractSessionWebSocketMessageBrokerConfigurer
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private static final Logger log = LoggerFactory.getLogger(WebSocketConfig.class);
 
@@ -35,7 +35,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/gs-guide-websocket").withSockJS();
+        registry.addEndpoint("/websocket").withSockJS();
     }
 
     @Override
@@ -43,27 +43,39 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         ChannelInterceptor interceptor = new ChannelInterceptorAdapter() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (accessor!= null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    //Authentication user = "aaa" ; // access authentication header(s)
-                   // accessor.setUser(user);
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                MessageHeaders header = message.getHeaders();
+                String sessionId = (String)header.get("simpSessionId");
+                if (accessor != null && accessor.getCommand() !=null && accessor.getCommand().getMessageType() != null) {
+                    SimpMessageType type = accessor.getCommand().getMessageType();
+                    if (accessor!= null && SimpMessageType.CONNECT.equals(type)) {
+                        //Authentication user = "aaa" ; // access authentication header(s)
+                        // accessor.setUser(user);
+                        String jwtToken = accessor.getFirstNativeHeader("AuthToken");
+                        log.info("Inbound preSend: sessionId={}, jwtToken={}", sessionId, jwtToken);
+                    }else if (type == SimpMessageType.DISCONNECT) {
+                        log.info("Inbound sessionId={} is disconnected", sessionId);
+                    }else if (type == SimpMessageType.SUBSCRIBE) {
+                        log.info("Inbound sessionId={} SUBSCRIBE", sessionId);
+                    } else if (type == SimpMessageType.MESSAGE) {
+                        message = UpdateMessage(message, "Inbound");
+                    }
                 }
+
+                return message;
+            }
+
+            @Override
+            public Message<?> postReceive(Message<?> message, MessageChannel channel) {
                 MessageHeaders header = message.getHeaders();
                 Object obj = message.getPayload();
-                log.info("Inbound T, class={}", obj.getClass().getCanonicalName());
-//                JSONObject jsonObj = JSON.parseObject(obj);
-//                jsonObj.put("InboundChannelContent2", "add to");
-//                Message<String> msg = new GenericMessage<String>(jsonObj.toJSONString(), header);
-//                log.info("Inbound preSend: message={}", message);
-//                return msg;
+                log.info("Inbound postReceive: message={}", message);
+                log.info("Inbound postReceive, class={}", obj.getClass().getCanonicalName());
                 return message;
             }
         };
 
         registration.interceptors(interceptor);
-
     }
 
     @Override
@@ -77,43 +89,56 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                if (accessor!= null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    //Authentication user = "aaa" ; // access authentication header(s)
-                    // accessor.setUser(user);
-                }
-                log.info("Outbound preSend: message={}", message);
-                MessageHeaders header = message.getHeaders();
-                Object obj = message.getPayload();
-                log.info("Outbound T, class={}", obj.getClass().getCanonicalName());
-                //一般都是byte[]
-                JSONObject jsonObj = null;
-                String strUTF8 = null;
-                Message<?> msg = null;
-                try {
-                    strUTF8 = new String((byte[])obj,"UTF-8");
-                    jsonObj = JSON.parseObject(strUTF8);
-                    jsonObj.put("InboundChannelContent2", "add to");
-                    byte[] msgToByte = jsonObj.toJSONString().getBytes("UTF-8");
-                    msg = new GenericMessage<>(msgToByte, header);
-                }
-                catch (Exception ex) {
-                    log.info("(byte[] to string exception. ex={}", ex.getLocalizedMessage());
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                if (accessor != null && accessor.getCommand() !=null && accessor.getCommand().getMessageType() != null) {
+                    SimpMessageType type = accessor.getCommand().getMessageType();
+                    if (accessor!= null && SimpMessageType.CONNECT.equals(type)) {
+                        //Authentication user = "aaa" ; // access authentication header(s)
+                        // accessor.setUser(user);
+                    } else if (type == SimpMessageType.MESSAGE) {
+                        message = UpdateMessage(message, "Outbound");
+                    }
                 }
 
-                if (msg != null) {
-                    log.info("Inbound preSend Modified: message={}, strUTF8={}", msg, strUTF8);
-                    return msg;
-                }
-                else {
-                    log.info("Inbound preSend Original: message={}, strUTF8={}", message, strUTF8);
-                    return message;
-                }
+
+                return message;
             }
         };
 
         registration.interceptors(interceptor);
     }
+
+    private Message<?> UpdateMessage(Message<?> message, String logFlag) {
+        log.info(logFlag + " preSend: message={}", message);
+        MessageHeaders header = message.getHeaders();
+        Object obj = message.getPayload();
+        //一般都是byte[]
+        JSONObject jsonObj = null;
+        String strUTF8 = null;
+        String strJsonUTF8 = null;
+        Message<?> msg = null;
+        try {
+            strUTF8 = new String((byte[])obj,"UTF-8");
+            jsonObj = JSON.parseObject(strUTF8);
+            jsonObj.put(logFlag + "ChannelContent2", "add to");
+            String value = jsonObj.getString("name");
+            jsonObj.put("name", logFlag + "add to " + value);
+            strJsonUTF8 = jsonObj.toJSONString();
+            byte[] msgToByte = strJsonUTF8.getBytes("UTF-8");
+            msg = new GenericMessage<>(msgToByte, header);
+        }
+        catch (Exception ex) {
+            log.info("(byte[] to string exception. ex={}", ex.getLocalizedMessage());
+        }
+
+        if (msg != null) {
+            log.info(logFlag + " preSend Modified: message={}, strUTF8={}, strJsonUTF8={}", msg, strUTF8, strJsonUTF8);
+            return msg;
+        }
+        else {
+            log.info(logFlag + " preSend Original: message={}, strUTF8={}", message, strUTF8);
+            return message;
+        }
+    }
+
 }

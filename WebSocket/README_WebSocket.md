@@ -13,3 +13,6 @@ http://127.0.0.1:8080/swagger-ui.html
 
 
 AbstractWebSocketMessageBrokerConfigurer已经过期了。
+
+controller中发送过来的消息页面也可以收到
+[INFO ] 22:17:02.811 [http-nio-8080-exec-7] com.yq.config.WebSocketConfig - Inbound preSend: sessionId=whhidk5t, jwtToken=yqbjtu

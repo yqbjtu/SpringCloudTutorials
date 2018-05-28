@@ -13,9 +13,13 @@ function setConnected(connected) {
 }
 
 function connect() {
-    var socket = new SockJS('/gs-guide-websocket');
+//端口是这个application的端口，也就是看application.properties中的设置，默认就是8080
+//http://localhost:8080/appRoot/websocket
+    var socket = new SockJS('/websocket');
     stompClient = Stomp.over(socket);
-    stompClient.connect({}, function (frame) {
+    //var token = localStorage.getItem('Auth-Token') //
+    //stompClient.connect({'Auth-Token': token},
+    stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
         stompClient.subscribe('/topic/greetings', function (greeting) {
