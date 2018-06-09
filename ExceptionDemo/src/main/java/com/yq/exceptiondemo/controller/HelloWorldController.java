@@ -1,5 +1,6 @@
 package com.yq.exceptiondemo.controller;
 
+import com.yq.exceptiondemo.config.SystemLog;
 import com.yq.exceptiondemo.exception.ComputerException;
 import com.yq.exceptiondemo.service.ComputerService;
 import com.yq.exceptiondemo.utils.Constants;
@@ -21,6 +22,7 @@ public class HelloWorldController {
     @Autowired
     ComputerService computerSvc;
 
+    @SystemLog(description = "helloWorld测试")
     @ApiOperation(value = "hello demo", notes = "just for demo")
     @GetMapping(value = "/hello", produces = "text/plain;charset=UTF-8")
     public String hello() {
@@ -28,6 +30,7 @@ public class HelloWorldController {
         return ret.toString();
     }
 
+    @SystemLog(description = "devide测试")
     @ApiOperation(value = "hello exception demo, service method will throw native exception", notes = "just for demo")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "a", defaultValue = "10", value = "a", required = true, dataType = "int", paramType = "query"),
