@@ -8,7 +8,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.*;
 
 
@@ -30,11 +29,9 @@ import java.lang.reflect.Method;
 @Aspect
 @Component
 public class SystemLogAspect {
-
     //本地异常日志记录对象
     private  static  final Logger logger = LoggerFactory.getLogger(SystemLogAspect. class);
 
-    //Service层切点
     @Pointcut("@annotation(com.yq.exceptiondemo.config.SystemLog)")
     public  void serviceAspect() {
         System.out.println("我是一个切入点");
@@ -50,28 +47,25 @@ public class SystemLogAspect {
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpSession session = request.getSession();
-        //读取session中的用户 等其他和业务相关的信息，比如当前用户所在组，以及其他信息, 例如ip
+        //读取session中的用户 等其他和业务相关的信息，比如当前用户所在应用，以及其他信息, 例如ip
         String ip = request.getRemoteAddr();
         try {
-            //*========控制台输出=========*//
-            System.out.println("=====前置通知开始=====");
-            System.out.println("请求方法:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
-            System.out.println("方法描述:" + getServiceMthodDescription(joinPoint));
-            System.out.println("请求人:" + null);
-            System.out.println("请求IP:" + ip);
-            //*========日志存入 数据库=========*//
+            System.out.println("doBefore enter");
+            System.out.println("method requested:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
+            System.out.println("method description:" + getServiceMethodDescription(joinPoint));
+            System.out.println("remote ip:" + ip);
+            //日志存入数据库
 
-            System.out.println("=====前置通知结束=====");
+            System.out.println("doBefore end");
         }  catch (Exception e) {
-            //记录本地异常日志
-            logger.error("==前置通知异常==");
-            logger.error("异常信息:{}", e.getMessage());
+            logger.error("doBefore exception");
+            logger.error("exceptionMsg={}", e.getMessage());
         }
     }
 
     @After("serviceAspect()")
     public void after(JoinPoint joinPoint) {
-        System.out.println("after aspect executed");
+        System.out.println("after  executed");
     }
 
     /**
@@ -81,7 +75,8 @@ public class SystemLogAspect {
     @AfterReturning(pointcut = "serviceAspect()")
     public void doAfter(JoinPoint joinPoint)
     {
-        System.out.println("=====SysLogAspect后置通知=====");
+        System.out.println("doAfter executed");
+        Object[] objs = joinPoint.getArgs();
     }
 
     /**
@@ -103,35 +98,34 @@ public class SystemLogAspect {
             }
         }
         try {
-              /*========控制台输出=========*/
-            System.out.println("=====异常通知开始=====");
-            System.out.println("异常代码:" + e.getClass().getName());
-            System.out.println("异常信息:" + e.getMessage());
-            System.out.println("异常方法:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
-            System.out.println("方法描述:" + getServiceMthodDescription(joinPoint));
-            System.out.println("请求IP:" + ip);
-            System.out.println("请求参数:" + params);
-            //*========日志存入 数据库=========*//
-            System.out.println("=====异常通知结束=====");
+            System.out.println("doAfterThrowing enter");
+            System.out.println("exception class:" + e.getClass().getName());
+            System.out.println("exception msg:" + e.getMessage());
+            System.out.println("exception method:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
+            System.out.println("method description:" + getServiceMethodDescription(joinPoint));
+            System.out.println("remote ip:" + ip);
+            System.out.println("method parameters:" + params);
+            //日志存入数据库
+            System.out.println("doAfterThrowing");
         }  catch (Exception ex) {
             //记录本地异常日志
-            logger.error("==异常通知异常==");
-            logger.error("异常信息:{}", ex.getMessage());
+            logger.error("doAfterThrowing exception");
+            logger.error("exception msg={}", ex.getMessage());
         }
          /*==========记录本地异常日志==========*/
-        logger.error("异常方法:{}异常代码:{}异常信息:{}参数:{}", joinPoint.getTarget().getClass().getName() + joinPoint.getSignature().getName(), e.getClass().getName(), e.getMessage(), params);
-
+        logger.error("method={}, code={}, msg={}, params={}",
+                joinPoint.getTarget().getClass().getName() + joinPoint.getSignature().getName(), e.getClass().getName(), e.getMessage(), params);
     }
 
 
     /**
-     * 获取注解中对方法的描述信息 用于service层注解
+     * 获取注解中对方法的描述信息
      *
      * @param joinPoint 切点
      * @return 方法描述
      * @throws Exception
      */
-    public  static String getServiceMthodDescription(JoinPoint joinPoint)
+    public  static String getServiceMethodDescription(JoinPoint joinPoint)
             throws Exception {
         String targetName = joinPoint.getTarget().getClass().getName();
         String methodName = joinPoint.getSignature().getName();
