@@ -43,14 +43,14 @@ public class SystemLogAspect {
      * @param joinPoint 切点
      */
     @Before("serviceAspect()")
-    public void doBefore(JoinPoint joinPoint) {
+    public void before(JoinPoint joinPoint) {
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpSession session = request.getSession();
         //读取session中的用户 等其他和业务相关的信息，比如当前用户所在应用，以及其他信息, 例如ip
         String ip = request.getRemoteAddr();
         try {
-            System.out.println("doBefore enter");
+            System.out.println("doBefore enter。 任何时候进入连接点都调用");
             System.out.println("method requested:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
             System.out.println("method description:" + getServiceMethodDescription(joinPoint));
             System.out.println("remote ip:" + ip);
@@ -63,19 +63,23 @@ public class SystemLogAspect {
         }
     }
 
-    @After("serviceAspect()")
-    public void after(JoinPoint joinPoint) {
-        System.out.println("after  executed");
-    }
-
     /**
      * 后通知（After advice） ：当某连接点退出的时候执行的通知（不论是正常返回还是异常退出）。
      * @param joinPoint
      */
+    @After("serviceAspect()")
+    public void after(JoinPoint joinPoint) {
+        System.out.println("after  executed. 无论连接点正常退出还是异常退出都调用");
+    }
+
+    /**
+     * 后通知（After advice） ：当某连接点退出的时候执行的通知（只有正常返回时调用）。
+     * @param joinPoint
+     */
     @AfterReturning(pointcut = "serviceAspect()")
-    public void doAfter(JoinPoint joinPoint)
+    public void AfterReturnning(JoinPoint joinPoint)
     {
-        System.out.println("doAfter executed");
+        System.out.println("AfterReturning executed。只有当连接点正常退出时才调用");
         Object[] objs = joinPoint.getArgs();
     }
 
@@ -86,7 +90,7 @@ public class SystemLogAspect {
      * @param e
      */
     @AfterThrowing(pointcut = "serviceAspect()", throwing = "e")
-    public void doAfterThrowing(JoinPoint joinPoint, Throwable e) {
+    public void afterThrowing(JoinPoint joinPoint, Throwable e) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         HttpSession session = request.getSession();
 
@@ -98,7 +102,7 @@ public class SystemLogAspect {
             }
         }
         try {
-            System.out.println("doAfterThrowing enter");
+            System.out.println("doAfterThrowing enter。 只有当连接点异常退出时才调用");
             System.out.println("exception class:" + e.getClass().getName());
             System.out.println("exception msg:" + e.getMessage());
             System.out.println("exception method:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
@@ -106,13 +110,11 @@ public class SystemLogAspect {
             System.out.println("remote ip:" + ip);
             System.out.println("method parameters:" + params);
             //日志存入数据库
-            System.out.println("doAfterThrowing");
+            System.out.println("doAfterThrowing end");
         }  catch (Exception ex) {
-            //记录本地异常日志
             logger.error("doAfterThrowing exception");
             logger.error("exception msg={}", ex.getMessage());
         }
-         /*==========记录本地异常日志==========*/
         logger.error("method={}, code={}, msg={}, params={}",
                 joinPoint.getTarget().getClass().getName() + joinPoint.getSignature().getName(), e.getClass().getName(), e.getMessage(), params);
     }
@@ -120,7 +122,6 @@ public class SystemLogAspect {
 
     /**
      * 获取注解中对方法的描述信息
-     *
      * @param joinPoint 切点
      * @return 方法描述
      * @throws Exception
