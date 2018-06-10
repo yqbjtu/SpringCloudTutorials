@@ -26,6 +26,7 @@ public class HelloWorldController {
     @ApiOperation(value = "hello demo", notes = "just for demo")
     @GetMapping(value = "/hello", produces = "text/plain;charset=UTF-8")
     public String hello() {
+        log.debug("hello");
         ReturnResult ret = new ReturnResult(Constants.QUERY_OK, "Hello World");
         return ret.toString();
     }
