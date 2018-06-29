@@ -1,0 +1,18 @@
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:7700/eureka/
+
+server:
+  port: 6602
+
+spring:
+  application:
+    name: commodity-service
+
+security:
+  user:
+    password: none
+  basic:
+    enabled: false
