@@ -1,0 +1,29 @@
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:7700/eureka/
+
+server:
+  port: 6603
+
+spring:
+  application:
+    name: apizuul-service
+
+security:
+  user:
+    password: none
+  basic:
+    enabled: false
+
+
+zuul:
+  routes:
+    api-user:
+      path: /userapi/**
+      service-id: user-service
+      sensitive-headers:
+    api-commodity:
+      path: /commodityapi/**
+      service-id: commodity-service
