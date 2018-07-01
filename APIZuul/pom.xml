@@ -47,11 +47,11 @@
 
 
         <!-- https://mvnrepository.com/artifact/com.netflix.zuul/zuul-core -->
-        <dependency>
-            <groupId>com.netflix.zuul</groupId>
-            <artifactId>zuul-core</artifactId>
-            <version>2.1.2</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.netflix.zuul</groupId>-->
+            <!--<artifactId>zuul-core</artifactId>-->
+            <!--<version>2.1.2</version>-->
+        <!--</dependency>-->
 
         <!--<Finchley版本的springcloud依赖spring-cloud-netflix-dependencies/2.0.0.RELEASE>-->
         <!--<spring-cloud-netflix-dependencies/2.0.0.RELEASE依赖com.netflix.zuul » zuul-core>-->
@@ -72,6 +72,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web </artifactId>
         </dependency>
 
         <dependency>
@@ -108,11 +113,13 @@
             <artifactId>springfox-spring-web</artifactId>
             <version>2.7.0</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
             <version>4.2.3.RELEASE</version>
         </dependency>
+
     </dependencies>
 
 
