@@ -1,0 +1,51 @@
+
+#服务名
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id:  apiuser
+        # 重点！/info必须使用http进行转发，lb代表从注册中心获取服务
+          uri: lb://user-service
+          predicates:
+          # 重点！转发该路径！,/userapi/**,
+          - Path=/userapi/**
+          # http://localhost:6601/userapi/user/users/2, 必须加上StripPrefix=1，否则访问服务时会带上userapi
+          #而不是我们期望的去掉userapi，只保留**部分
+          filters:
+          - StripPrefix=1
+        - id: apicommodity
+        # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
+          uri: lb:commodity-service
+          predicates:
+          # 转发/bullet端点下的所有路径
+          - Path= /commodityapi/**
+        - id: 163_route
+          uri: http://www.163.com/
+          predicates:
+          - Path=/163
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:7700/eureka/
+
+server:
+  port: 6604
+
+
+security:
+  user:
+    password: none
+  basic:
+    enabled: false
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.ipc.netty: DEBUG
