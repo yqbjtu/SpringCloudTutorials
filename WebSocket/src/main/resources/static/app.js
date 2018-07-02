@@ -17,8 +17,7 @@ function connect() {
 //http://localhost:8080/appRoot/websocket
     //var socket = new SockJS('/websocket');
 
-    //var sockjs_url = 'http://localhost:8080/websocket';
-    var sockjs_url = 'http://localhost:1443/service/endpointWisely';
+    var sockjs_url = 'http://localhost:8080/websocket';
     //var sockjs_url = '/websocket';
 
     var socket = new SockJS(sockjs_url);
