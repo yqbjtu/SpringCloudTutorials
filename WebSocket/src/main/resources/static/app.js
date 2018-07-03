@@ -13,7 +13,7 @@ function setConnected(connected) {
 }
 
 function connect() {
-//端口是这个application的端口，也就是看application.properties中的设置，默认就是8080
+//端口是这个application的端口，也就是看application.properties中的设置，默认就是8080, 必须配置成localhost，而不能使用127.0.0.1，否则有跨域问题
 //http://localhost:8080/appRoot/websocket
     //var socket = new SockJS('/websocket');
 
@@ -28,7 +28,7 @@ function connect() {
         setConnected(true);
         console.log('Connected: ' + frame);
         //stompClient.subscribe('/topic/greetings'+, function (greeting) {
-        stompClient.subscribe('/topic/pointStatePerDevice/b255d0329f204684a22e5adb31177bc5', function (greeting) {
+        stompClient.subscribe('/topic/myxyz', function (greeting) {
             console.log("subscribe:" + greeting);
             showGreeting(JSON.parse(greeting.body).content);
         });

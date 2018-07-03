@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.yq.WebSocketApplication;
 import com.yq.domain.Greeting;
 import com.yq.domain.HelloMessage;
+import com.yq.service.WebSocketSendSvc;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +37,8 @@ public class GreetingController {
 
     @MessageMapping("/hello")
     @SendTo(TOPIC_GREETING)
-    //虽然我在inbound中给message增加了新的字段，但是当json解析成message.getName()，也就是只需要name部分，而jsonObj.put(logFlag + "ChannelContent2", "add to");
-    //被丢弃了。但是因为我们重新sendTo了一遍，所有有加上{"InboundChannelContent2":"add to","content":"Hello1, Inboundadd to qqq!","name":"Inboundadd to null"}
+    //虽然在inbound中给message增加了新的字段，但是当json解析成message.getName()，也就是只需要name部分，而jsonObj.put(logFlag + "ChannelContent2", "add to");
+    //被丢弃了。但是因为我们重新sendTo了一遍，所以又加上{"InboundChannelContent2":"add to","content":"Hello1, Inboundadd to qqq!","name":"Inboundadd to null"}
     public Greeting greeting(HelloMessage message) throws Exception {
         log.info("greeting to " + TOPIC_GREETING + " with {}", message.getName());
         Thread.sleep(1000); // simulated delay
@@ -52,7 +54,7 @@ public class GreetingController {
     }
 
     @ApiOperation(value = "sendMessage", notes = "")
-    @ApiImplicitParam(name = "message", value = "message, 这个直接发送到/topic/greetings没有经过inbound的filter", required = true, dataType = "String", paramType = "query")
+    @ApiImplicitParam(name = "message", value = "message, 直接发送到/topic/greetings没有经过inbound的filter", required = true, dataType = "String", paramType = "query")
     @PostMapping(value = "/message", produces = "application/json;charset=UTF-8")
     public String sendMessage(@RequestParam String message) {
         String getTimestamp = LocalDateTime.now().toString();
@@ -67,21 +69,23 @@ public class GreetingController {
         return jsonObj.toJSONString();
     }
 
-    @ApiOperation(value = "sendMessage2")
-    @ApiImplicitParam(name = "message", value = "message, 这种方式无法包消息发送出去", required = true, dataType = "String", paramType = "query")
-    @SendTo(TOPIC_GREETING)
-    @PostMapping(value = "/message2", produces = "application/json;charset=UTF-8")
-    public String sendMessage2(@RequestParam String message) {
+    @ApiOperation(value = "messageWithTopic")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "topic", value = "topic", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "message", value = "message", required = true, dataType = "string", paramType = "query"),
+    })
+    @PostMapping(value = "/messageWithTopic", produces = "application/json;charset=UTF-8")
+    public String messageWithTopic(@RequestParam String topic,  @RequestParam String message) {
         String getTimestamp = LocalDateTime.now().toString();
-        String text = "[" + getTimestamp + "]:" + message;
 
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", getTimestamp);
-        jsonObj.put("SendTo", "yes");
+        jsonObj.put("topic", topic);
         jsonObj.put("content", message);
 
-
-        log.info("sendMessage to " + TOPIC_GREETING + " with {}", message);
+        messagingTemplate.convertAndSend(topic, message);
+        log.info("sendMessage to {} with {}", topic, message);
         return jsonObj.toJSONString();
     }
+
 }
