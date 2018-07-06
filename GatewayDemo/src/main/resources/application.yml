@@ -1,3 +1,6 @@
+server:
+  port: 6604
+
 
 #服务名
 spring:
@@ -5,6 +8,10 @@ spring:
     name: gateway-service
   cloud:
     gateway:
+      filter:
+        remove-non-proxy-headers:
+          headers:
+          - dummy
       routes:
         - id:  apiuser
         # 重点！/info必须使用http进行转发，lb代表从注册中心获取服务
@@ -16,16 +23,20 @@ spring:
           #而不是我们期望的去掉userapi，只保留**部分
           filters:
           - StripPrefix=1
-        - id: apicommodity
-        # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
-          uri: lb:commodity-service
+        - id: apisocket
+         # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
+         # lb:ws://notification-service
+          uri: lb://bullet
           predicates:
-          # 转发/bullet端点下的所有路径
-          - Path= /commodityapi/**
-        - id: 163_route
-          uri: http://www.163.com/
+           # 转发/bullet端点下的所有路径
+          - Path=/bullet/info/**
+        - id: apisocket
+         # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
+         # lb:ws://notification-service
+          uri: lb:ws://bullet
           predicates:
-          - Path=/163
+           # 转发/bullet端点下的所有路径
+          - Path=/bullet/**
 
 
 eureka:
@@ -33,8 +44,6 @@ eureka:
     serviceUrl:
       defaultZone: http://localhost:7700/eureka/
 
-server:
-  port: 6604
 
 
 security:
