@@ -29,3 +29,14 @@ CorsDemo的端口是6606， 我们在hello.js中使用"http://localhost:6606/use
 			}
 		};
 	}
+	
+	
+	
+	记录下问题的解决办法
+	容器启动成功之后，我们可以通过浏览器访问了 http://localhost:8080/index，但是我们页面上并没有看到我们期望的hell worold，却是如下的错误，这说明的我们的Controller初始化失败。。。。一脸懵逼，这是为啥？
+	 @SpringBootApplication 相当于spring的三个注解的作用，但是其他注解如果想要被扫描掉，就必须和该类在同一级目录下，或者子目录下。
+
+webjars的map路径和resource location
+registry.addResourceHandler("/webjars/**")
+                .addResourceLocations(
+                        "classpath:/META-INF/resources/webjars/");
