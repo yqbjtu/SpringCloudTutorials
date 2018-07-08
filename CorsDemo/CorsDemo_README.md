@@ -18,3 +18,14 @@ CorsDemo的端口是6606， 我们在hello.js中使用"http://localhost:6606/use
 
 然后重新再启动一个java -jar target\CorsDemo-1.0-SNAPSHOT.jar   --server.port=6677，
 这时候通过http://localhost:6677，可以看到rest能正常工作，但是如果我们使用http://127.0.01:6677/， 也会出现Invalid CORS request错误
+
+如果同时设置了全局CorsRegistry和方法上的CrossOrigin吗， 那么方法上的优先，
+	@Bean
+	public WebMvcConfigurer corsConfigurer() {
+		return new WebMvcConfigurerAdapter() {
+			@Override
+			public void addCorsMappings(CorsRegistry registry) {
+				registry.addMapping("/user/users/*").allowedOrigins("http://localhost:6677");
+			}
+		};
+	}

@@ -42,7 +42,7 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "userID", required = true, dataType = "string", paramType = "path"),
     })
-    @CrossOrigin(origins = "http://localhost:6677")
+    //@CrossOrigin(origins = "http://localhost:6677")
     @GetMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
     public User getUser(@PathVariable String userId) {
         User user = (User)userMap.get(userId);
