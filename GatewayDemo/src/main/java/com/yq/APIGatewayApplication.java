@@ -8,6 +8,11 @@ import org.springframework.cloud.client.SpringCloudApplication;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.server.RequestPredicates;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
 
 
 //@SpringCloudApplication 包含了@SpringBootApplication和@EnableDiscoveryClient
@@ -24,9 +29,11 @@ public class APIGatewayApplication  {
                 )
                .route("websocket_route", r -> r.path("/apitopic1/**")
                 .uri("ws://127.0.0.1:6605"))
-//                .route(r -> r.path("/userapi/**")
-//                        .uri("lb://user-service/")
-//                )
+                .route(r -> r.path("/userapi3/**")
+                        .filters(f -> f.addResponseHeader("X-AnotherHeader", "testapi3"))
+
+                        .uri("lb://user-service/")
+                )
                 .build();
     }
 
@@ -35,6 +42,16 @@ public class APIGatewayApplication  {
         logger.info(" Start APIGatewayApplication Done");
     }
 
+    /*
+    当请求的路径为 /testfun 时，直接返回ok的状态码，且响应体为 hello 字符串。
+     */
+    @Bean
+    public RouterFunction<ServerResponse> testFunRouterFunction() {
+        RouterFunction<ServerResponse> route = RouterFunctions.route(
+                RequestPredicates.path("/testfun"),
+                request -> ServerResponse.ok().body(BodyInserters.fromObject("hello")));
+        return route;
+    }
 
 
 }

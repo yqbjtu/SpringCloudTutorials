@@ -8,7 +8,7 @@ server:
   port: 6601
 
 spring:
-  application:
+   application:
     name: user-service
 
 security:

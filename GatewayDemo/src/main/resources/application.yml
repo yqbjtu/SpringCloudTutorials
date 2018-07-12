@@ -8,10 +8,9 @@ spring:
     name: gateway-service
   cloud:
     gateway:
-      filter:
-        remove-non-proxy-headers:
-          headers:
-          - dummy
+#      discovery:
+#        locator:
+#          enabled: true
       routes:
         - id:  apiuser
         # 重点！/info必须使用http进行转发，lb代表从注册中心获取服务
@@ -23,6 +22,17 @@ spring:
           #而不是我们期望的去掉userapi，只保留**部分
           filters:
           - StripPrefix=1
+          - MyPre=foo, bar
+          - AddRequestParameter=foo1, bar1
+          - UrlFilter
+          - AddResponseHeader=X-Response-Foo, Bar2
+        - id:  api2user
+          uri: lb://user-service
+          predicates:
+          - Path=/userapi2/**
+          filters:
+          - StripPrefix=1
+#          - UrlFilter
         - id: apisocket
          # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
          # lb:ws://notification-service
@@ -57,4 +67,5 @@ logging:
     org.springframework.cloud.gateway: TRACE
     org.springframework.http.server.reactive: DEBUG
     org.springframework.web.reactive: DEBUG
-    reactor.ipc.netty: DEBUG
+    reactor.ipc.netty: INFO
+    com.yq: DEBUG
