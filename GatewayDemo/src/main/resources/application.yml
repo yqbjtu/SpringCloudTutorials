@@ -22,7 +22,8 @@ spring:
           #而不是我们期望的去掉userapi，只保留**部分
           filters:
           - StripPrefix=1
-          - MyPre=foo, bar
+          - MyPre=req, my001
+          - MyPost=res,their001
           - AddRequestParameter=foo1, bar1
           - UrlFilter
           - AddResponseHeader=X-Response-Foo, Bar2

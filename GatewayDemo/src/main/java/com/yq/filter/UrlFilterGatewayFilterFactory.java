@@ -49,9 +49,13 @@ public class UrlFilterGatewayFilterFactory implements GatewayFilterFactory<Objec
             }
             else {
                 String loginInfo= (String) exchange.getAttribute("LOGIN_INFO");
-                if (StringUtils.isNotBlank(loginInfo)) {
+                String token = exchange.getRequest().getQueryParams().getFirst("authToken");
+                if (StringUtils.isNotBlank(token)) {
                     //查看loginInfo是否有效，无法就必须重新登录， 这里省略
-
+                    return chain.filter(exchange);
+                }
+                else {
+                    log.info("path {}. URL {} has no token.", request.getPath(), uri);
                 }
             }
 

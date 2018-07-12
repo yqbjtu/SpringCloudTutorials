@@ -31,7 +31,8 @@ public class CustomFilter implements GatewayFilter, Ordered {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
         URI uri = request.getURI();
-        return chain.filter(exchange).then(
+        return chain.filter(exchange).
+                then(
                 Mono.fromRunnable(() -> {
                     Long startTime = exchange.getAttribute(COUNT_START_TIME);
                     Long endTime=(System.currentTimeMillis() - startTime);
