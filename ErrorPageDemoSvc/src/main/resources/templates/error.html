@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>错误页面!</title>
+    <link rel="stylesheet" th:href="@{/style.css}"></link>
+</head>
+<html>
+<div class="errorPage">
+    <span class="oops">错误Path!</span><br/>
+    <!--<img th:src="@{/myErrorPage.png}"></img>-->
+    <p>There seems to be a problem with the page you requested
+        (<span th:text="${path}"></span>).</p>
+    <p th:text="${'Details: ' + message}"></p>
+</div>
+</html>
