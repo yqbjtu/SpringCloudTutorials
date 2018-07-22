@@ -1,0 +1,12 @@
+package com.yq;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ErrorControllerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ErrorControllerApplication.class, args);
+	}
+}

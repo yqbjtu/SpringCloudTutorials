@@ -40,3 +40,6 @@ webjars的map路径和resource location
 registry.addResourceHandler("/webjars/**")
                 .addResourceLocations(
                         "classpath:/META-INF/resources/webjars/");
+                        
+                        
+     WebMvcConfigure是用来全局定制化Spring Boot的MVC特性。如设置拦截器、跨域访问配置、格式化、URI到视图的映射或者其它全局定制接口。
