@@ -1,7 +1,6 @@
 package com.yq.filter;
 
 import com.alibaba.fastjson.JSONObject;
-import com.netflix.discovery.CommonConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
