@@ -7,7 +7,7 @@
     <title>错误页面!</title>
     <link rel="stylesheet" th:href="@{/style.css}"></link>
 </head>
-<html>
+<body>
 <div class="errorPage">
     <span class="oops">错误Path!</span><br/>
     <img th:src="@{/myErrorPage.png}"></img>
@@ -15,4 +15,5 @@
         (<span th:text="${path}"></span>).</p>
     <p th:text="${'Details: ' + message}"></p>
 </div>
+</body>
 </html>

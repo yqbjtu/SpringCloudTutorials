@@ -6,6 +6,10 @@ http://localhost:5502/swagger-ui.html#/
 https://stackoverflow.com/questions/25356781/spring-boot-remove-whitelabel-error-page
 
 
+
+删除swagger的SwaggerConfig，静态资源，就是图片和css文件能正常加载了
+
+
 @RestController
 @RequestMapping("/error")
 public class SimpleErrorController implements ErrorController {
