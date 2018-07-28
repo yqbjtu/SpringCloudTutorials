@@ -3,7 +3,6 @@
 package com.yq.controller;
 
 import com.yq.domain.User;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +36,8 @@ public class UserController {
 
     @GetMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
     public User getUser(@PathVariable String userId) {
-        User user = (User)userMap.get(userId);
+
+        User user = userMap.get(userId);
         return user;
     }
 
