@@ -53,6 +53,9 @@ The @EnableRedisHttpSession annotation creates a Spring Bean with the name of sp
 ![redis中的效果](./docs/redis_httpsession.png)
 
 
+要确保你的redis设置密码， 如果没有设置密码，不要在配置文件中使用spring.redis.password=redis123
+
+
  
 
  
