@@ -50,7 +50,7 @@ The @EnableRedisHttpSession annotation creates a Spring Bean with the name of sp
 ```
 
 程序运行后可以在redis中看到如图的效果  
-![redis中的效果](../docs/redis_httpsession.png)
+![redis中的效果](/docs/redis_httpsession.png)
 
 
  
