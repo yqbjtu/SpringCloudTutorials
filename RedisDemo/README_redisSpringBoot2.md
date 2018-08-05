@@ -14,6 +14,15 @@ https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.0-Release-Note
 Spring Boot 2迁移指南  
 https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.0-Migration-Guide
 
+Redis
+
+Lettuce is now used instead of Jedis as the Redis driver when you use spring-boot-starter-data-redis. If you are using higher level Spring Data constructs you should find that the change is transparent.
+
+We still support Jedis. Switch dependencies if you prefer Jedis by excluding io.lettuce:lettuce-core and adding redis.clients:jedis instead.
+
+Connection pooling is optional and, if you are using it, you now need to add commons-pool2 yourself as Lettuce, contrary to Jedis, does not bring it transitively.
+
+
 Spring 5迁移指南  
 https://github.com/spring-projects/spring-framework/wiki/Upgrading-to-Spring-Framework-5.x#upgrading-to-version-50
 
