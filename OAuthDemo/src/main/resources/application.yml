@@ -1,32 +1,13 @@
 security:
   oauth2:
     client:
-      client-id: acme
-      client-secret: acmesecret
-      scope: read,write
-      auto-approve-scopes: '.*'
-
-gitee:
-  client:
-    clientId: 1ad6b2baf32f26d63f9512c76f777edab584c8b83e0a6fc9ce5733963533fdd9
-    clientSecret: 4c7d2c9cf3f8dca0a5c5d14b7459910d4d1f5a4ff5020d3d7debcb64feded069
-    accessTokenUri: https://gitee.com/oauth/token
-    userAuthorizationUri: https://gitee.com/oauth/authorize
-    tokenName: access_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-  resource:
-    userInfoUri: https://gitee.com/api/v5/user
-
-github:
-  client:
-    clientId: ffc92fdfad5460e396de
-    clientSecret: 549aff048e5d0e8b6f39873628bac08011ca77b4
-    accessTokenUri: https://github.com/login/oauth/access_token
-    userAuthorizationUri: https://github.com/login/oauth/authorize
-    clientAuthenticationScheme: form
-  resource:
-    userInfoUri: https://api.github.com/user
+      clientId: ffc92fdfad5460e396de
+      clientSecret: 549aff048e5d0e8b6f39873628bac08011ca77b4
+      accessTokenUri: https://github.com/login/oauth/access_token
+      userAuthorizationUri: https://github.com/login/oauth/authorize
+      clientAuthenticationScheme: form
+    resource:
+      userInfoUri: https://api.github.com/user
 
 logging:
   level:
