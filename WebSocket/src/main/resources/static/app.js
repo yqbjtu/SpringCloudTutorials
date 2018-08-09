@@ -17,9 +17,8 @@ function connect() {
 //http://localhost:8080/appRoot/websocket
     //var socket = new SockJS('/websocket');
 
-    var sockjs_url = 'http://localhost:8080/websocket';
+    var sockjs_url = 'http://127.0.0.1:6604/bullet';
     //var sockjs_url = '/websocket';
-
     var socket = new SockJS(sockjs_url);
     stompClient = Stomp.over(socket);
     //var token = localStorage.getItem('Auth-Token') //
@@ -27,11 +26,13 @@ function connect() {
     stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
+        ///topic/deviceIsLive/
         //stompClient.subscribe('/topic/greetings'+, function (greeting) {
-        stompClient.subscribe('/topic/myxyz', function (greeting) {
-            console.log("subscribe:" + greeting);
+        stompClient.subscribe('/topic/app01', function (greeting) {
+            console.log("subscribe edbb:" + greeting);
             showGreeting(JSON.parse(greeting.body).content);
         });
+
     });
 }
 

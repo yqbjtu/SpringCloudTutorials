@@ -7,7 +7,7 @@ https://docs.spring.io/spring-framework/docs/5.0.1.RELEASE/spring-framework-refe
 
 https://docs.spring.io/spring-framework/docs/5.0.1.RELEASE/spring-framework-reference/web.html#websocket-stomp-handle-send
 
-http://127.0.0.1:8080/
+http://127.0.0.1:8086/
 通过下面的swagger可以在controller中发送消息给socket
 http://127.0.0.1:6666/swagger-ui.html
 

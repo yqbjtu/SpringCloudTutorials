@@ -1,0 +1,39 @@
+#session存储
+  session:
+    store-type: none
+
+
+#将 hystrix 的超时时间禁用掉
+#hystrix:
+#  command:
+#    default:
+#      execution:
+#        timeout:
+#          enabled: false
+
+
+
+
+#zuul:
+#  routes:
+#    echo:
+#      path: /myusers/**
+#      serviceId: myusers-service
+#      stripPrefix: true
+
+#      hystrix:
+#        command:
+#          myusers-service:
+#            execution:
+#              isolation:
+#                thread:
+#                  timeoutInMilliseconds: ...
+#
+#      myusers-service:
+#        ribbon:
+#          NIWSServerListClassName: com.netflix.loadbalancer.ConfigurationBasedServerList
+#          ListOfServers: http://example1.com,http://example2.com
+#          ConnectTimeout: 1000
+#          ReadTimeout: 3000
+#          MaxTotalHttpConnections: 500
+#          MaxConnectionsPerHost: 100

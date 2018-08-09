@@ -1,6 +1,4 @@
-///*
-// * Copyright (C) 2018 org.citic.iiot, Inc. All Rights Reserved.
-// */
+
 //
 //
 //package com.yq.config;

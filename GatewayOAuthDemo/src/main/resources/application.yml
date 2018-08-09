@@ -1,0 +1,81 @@
+server:
+  port: 6604
+
+security:
+  oauth2:
+    client:
+      clientId: ffc92fdfad5460e396de
+      clientSecret: 549aff048e5d0e8b6f39873628bac08011ca77b4
+      accessTokenUri: https://github.com/login/oauth/access_token
+      userAuthorizationUri: https://github.com/login/oauth/authorize
+      clientAuthenticationScheme: form
+    resource:
+      userInfoUri: https://api.github.com/user
+  user:
+    password: none
+  basic:
+    enabled: false
+
+#服务名
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+#      discovery:
+#        locator:
+#          enabled: true
+      routes:
+        - id:  apiuser
+        # 重点！/info必须使用http进行转发，lb代表从注册中心获取服务
+          uri: lb://user-service
+          predicates:
+          # 重点！转发该路径！,/userapi/**,
+          - Path=/userapi/**
+          # http://localhost:6601/userapi/user/users/2, 必须加上StripPrefix=1，否则访问服务时会带上userapi
+          #而不是我们期望的去掉userapi，只保留**部分
+          filters:
+          - StripPrefix=1
+          - MyPre=req, my001
+          - MyPost=res,their001
+          - AddRequestParameter=foo1, bar1
+          - UrlFilter
+          - AddResponseHeader=X-Response-Foo, Bar2
+        - id:  api2user
+          uri: lb://user-service
+          predicates:
+          - Path=/userapi2/**
+          filters:
+          - StripPrefix=1
+#          - UrlFilter
+        - id: apisocket
+         # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
+         # lb:ws://notification-service
+          uri: lb://bullet
+          predicates:
+           # 转发/bullet端点下的所有路径
+          - Path=/bullet/info/**
+        - id: apisocket
+         # 重点！lb:ws://代表从注册中心获取服务，并且转发协议为websocket，这种格式怀疑人生！
+         # lb:ws://notification-service
+          uri: lb:ws://bullet
+          predicates:
+           # 转发/bullet端点下的所有路径
+          - Path=/bullet/**
+
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:7700/eureka/
+
+
+
+
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
+    reactor.ipc.netty: INFO
+    com.yq: DEBUG
