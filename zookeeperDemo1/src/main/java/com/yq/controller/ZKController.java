@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @RestController
@@ -78,6 +79,17 @@ public class ZKController {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
         jsonObj.put("str", str);
+        return jsonObj.toJSONString();
+    }
+
+    @ApiOperation(value = "getCurrentList", notes="post")
+    @GetMapping(value = "/getCurrentList", produces = "application/json;charset=UTF-8")
+    public String getCurrentList() {
+        List<String> topics = zkClient.getCurrentList();
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        jsonObj.put("topics", topics);
         return jsonObj.toJSONString();
     }
 }
