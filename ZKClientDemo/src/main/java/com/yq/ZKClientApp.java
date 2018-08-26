@@ -15,16 +15,16 @@ import org.slf4j.LoggerFactory;
 public class ZKClientApp {
     private static final Logger log = LoggerFactory.getLogger(ZKClientApp.class);
     private static final String ZK_SERVERS = "127.0.0.1:2181";
-    private static final String ZNODE_NAME = "/test001";
+    private static final String PATH_NAME_TEST = "/test001";
 
     public static void main(String[] args) {
 
         MyZooKeeper zk = new MyZooKeeper();
         zk.connect(ZK_SERVERS);
-        zk.createZNode(ZNODE_NAME, "hello world!");
-        String value = zk.readData(ZNODE_NAME);
-        log.info("znode={}, data={}",ZNODE_NAME, value);
-        zk.deteleZNode(ZNODE_NAME);
+        zk.createPath(PATH_NAME_TEST, "hello world!");
+        String value = zk.readData(PATH_NAME_TEST);
+        log.info("znode={}, data={}", PATH_NAME_TEST, value);
+        zk.detelePath(PATH_NAME_TEST);
         try {
             Thread.sleep(1000 * 120);
         }

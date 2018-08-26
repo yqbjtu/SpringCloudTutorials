@@ -20,7 +20,7 @@ public class MyZooKeeper implements Watcher {
     private static final int SESSION_TIME = 2000;
     public static ZooKeeper zooKeeper = null;
 
-    private static final String NODE_NAME = "/yqNode";
+    private static final String PATH_NAME = "/yqPath";
 
     @Override
     public void process(WatchedEvent event) {
@@ -36,11 +36,14 @@ public class MyZooKeeper implements Watcher {
         }
         else if (event.getType() == Event.EventType.NodeDeleted) {
             log.info("node delete={}", event.getPath() );
+        }if (event.getType() == Event.EventType.NodeDataChanged) {
+            String data = readData(event.getPath());
+            log.info("data change. path={}, data={}", event.getPath(), data);
         }
 
-        //必须重新注册，要不然就无法获得变化
+        //必须重新注册，要不然就无法获得变化通知
         try {
-            zooKeeper.exists(NODE_NAME, this);
+            zooKeeper.exists(PATH_NAME, this);
         }catch (Exception ex) {
             log.error( "Failed to connect, Exception , ex={}", ex.getMessage(), ex );
         }
@@ -52,7 +55,7 @@ public class MyZooKeeper implements Watcher {
         try {
             if(zooKeeper == null){
                 zooKeeper = new ZooKeeper(hosts,SESSION_TIME,this);
-                zooKeeper.exists(NODE_NAME, this);
+                zooKeeper.exists(PATH_NAME, this);
                 countDownLatch.await();
             }
         } catch (IOException ex) {
@@ -75,27 +78,27 @@ public class MyZooKeeper implements Watcher {
         }
     }
 
-    public boolean createZNode(String path,String data){
+    public boolean createPath(String path, String data){
         try {
             String zkPath = MyZooKeeper.zooKeeper.create(path, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            log.info("ZooKeeper. create znode path={}", zkPath);
+            log.info("ZooKeeper. create path={}", zkPath);
             return true;
         } catch (KeeperException e) {
-            log.error("Failed to create znode：" + e.getMessage() + "，path:" + path  ,e);
+            log.error("Failed to create path. errMsg：" + e.getMessage() + "，path:" + path  ,e);
         } catch (InterruptedException e) {
-            log.error("Failed to create znode：" + e.getMessage() + "，path:" + path  ,e);
+            log.error("Failed to create path. errMsg:" + e.getMessage() + "，path:" + path  ,e);
         }
         return false;
     }
-    public boolean deteleZNode(String path){
+    public boolean detelePath(String path){
         try {
             MyZooKeeper.zooKeeper.delete(path, -1);
-            log.info("ZooKeeper delete znode，path={}", path);
+            log.info("ZooKeeper delete path，path={}", path);
             return true;
         } catch (InterruptedException e) {
-            log.error("Failed to delete znode：" + e.getMessage() + "，path:" + path ,e);
+            log.error("Failed to delete path, errMsg：" + e.getMessage() + "，path:" + path ,e);
         } catch (KeeperException e) {
-            log.error("Failed to delete znode：" + e.getMessage() + "，path:" + path  ,e);
+            log.error("Failed to delete path, errMsg：" + e.getMessage() + "，path:" + path  ,e);
         }
         return false;
     }
