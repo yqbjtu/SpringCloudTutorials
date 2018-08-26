@@ -20,10 +20,13 @@ public class MyZooKeeper implements Watcher {
     private static final int SESSION_TIME = 2000;
     public static ZooKeeper zooKeeper = null;
 
+    private static final String NODE_NAME = "/yqNode";
 
     @Override
     public void process(WatchedEvent event) {
         log.info("event notification={}", event.getState() );
+        String path = event.getPath();
+        log.info("type={}. path={}", event.getType(), path);
         if(event.getState()==KeeperState.SyncConnected){
             countDownLatch.countDown();
 
@@ -35,43 +38,29 @@ public class MyZooKeeper implements Watcher {
             log.info("node delete={}", event.getPath() );
         }
 
-        log.info("type={}", event.getType() );
-        String path = event.getPath();
-        if (event.getType() == Event.EventType.None) {
-            // We are are being told that the state of the
-            // connection has changed
-            switch (event.getState()) {
-                case SyncConnected:
-                    // In this particular example we don't need to do anything
-                    // here - watches are automatically re-registered with
-                    // server and any watches triggered while the client was
-                    // disconnected will be delivered (in order of course)
-                    log.info("SyncConnected node path={}", path);
-                    break;
-                case Expired:
-                    // It's all over
-                    break;
-            }
-        } else {
-            if (path != null ) {
-                log.info("node path={}", path );
-            }
+        //必须重新注册，要不然就无法获得变化
+        try {
+            zooKeeper.exists(NODE_NAME, this);
+        }catch (Exception ex) {
+            log.error( "Failed to connect, Exception , ex={}", ex.getMessage(), ex );
         }
 
-        zooKeeper.register(this);
-
+        //zooKeeper.register(this);
     }
 
     public void connect(String hosts){
         try {
             if(zooKeeper == null){
                 zooKeeper = new ZooKeeper(hosts,SESSION_TIME,this);
+                zooKeeper.exists(NODE_NAME, this);
                 countDownLatch.await();
             }
         } catch (IOException ex) {
-            log.error("Failed to connect, InterruptedException , ex={} ", ex.getMessage(), ex);
+            log.error("Failed to connect, IOException , ex={} ", ex.getMessage(), ex);
         } catch (InterruptedException ex) {
-            log.error( "Failed to connect, OException , ex={}", ex.getMessage(), ex );
+            log.error( "Failed to connect, InterruptedException , ex={}", ex.getMessage(), ex );
+        } catch (Exception ex) {
+            log.error( "Failed to connect, Exception , ex={}", ex.getMessage(), ex );
         }
     }
 

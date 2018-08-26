@@ -1,10 +1,6 @@
 package com.yq.service;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.yq.ZKDemoOneApplication;
 import com.yq.domain.User;
-import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.exception.ZkNodeExistsException;
@@ -18,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Simple to Introduction

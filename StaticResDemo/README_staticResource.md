@@ -6,3 +6,6 @@ http://localhost:6608
 只能放在src/main/resources/static目录下面或者src/main/resources/public目录下面,  image文件也可以在public目录下
 
 static下的index.html比public的index.html优先
+
+
+https://docs.spring.io/spring-boot/docs/1.5.12.RELEASE/reference/html/boot-features-developing-web-applications.html#boot-features-spring-mvc-static-content
