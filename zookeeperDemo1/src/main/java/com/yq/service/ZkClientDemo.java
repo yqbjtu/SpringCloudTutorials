@@ -91,6 +91,7 @@ public class ZkClientDemo {
                 log.info("parent node temp does not exist, try create it={}", path);
                 try {
                     path = zkClient.create(path, "temp", CreateMode.EPHEMERAL);
+
                     myTopicsList.add(topic);
                     log.info("add topic={} to myTopicsList, now myTopicsList={}", topic, myTopicsList);
                     //change record state
@@ -162,9 +163,11 @@ public class ZkClientDemo {
         else {
             log.info("parent node does not exist, create it");
             path = zkClient.create(PARENT_NODE, user, CreateMode.PERSISTENT);
+
         }
         //父节点创建完毕，开始创建子节点, 默认自己点数据都是0，只有当其他人订阅了该nodeName，才修改data
-        path = zkClient.create(PARENT_NODE + "/" + nodeName, "0", CreateMode.PERSISTENT);
+        //path = zkClient.create(PARENT_NODE + "/" + nodeName, "0", CreateMode.PERSISTENT);
+        zkClient.createPersistent(PARENT_NODE + "/" + nodeName, true);
         log.info("created path:"+path);
         return path;
     }
@@ -177,6 +180,7 @@ public class ZkClientDemo {
             //Object obj = zkClient.readData(childNode);
             //log.info("childNode={}, existingVal={}", childNode, obj);
             isDelOK = zkClient.delete(childNode);
+
             //delete the temp node either
             deleteNodeTemp(nodeName);
         }
