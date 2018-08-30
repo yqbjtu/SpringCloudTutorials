@@ -5,8 +5,8 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
-import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
 import org.apache.curator.retry.RetryNTimes;
+
 
 /**
  * Curator framework watch test.
@@ -14,7 +14,7 @@ import org.apache.curator.retry.RetryNTimes;
 public class CuratorWatcherTest {
 
     /** Zookeeper info */
-    private static final String ZK_ADDRESS = "192.168.1.100:2181";
+    private static final String ZK_ADDRESS = "127.0.0.1:2181";
     private static final String ZK_PATH = "/zktest";
 
     public static void main(String[] args) throws Exception {
@@ -44,7 +44,7 @@ public class CuratorWatcherTest {
                         + ", stat=[" + data.getStat() + "]");
             }
         });
-        watcher.start(StartMode.BUILD_INITIAL_CACHE);
+        watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         System.out.println("Register zk watcher successfully!");
 
         Thread.sleep(Integer.MAX_VALUE);

@@ -36,6 +36,12 @@
             <version>4.0.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.apache.curator/curator-client -->
         <dependency>
             <groupId>org.apache.curator</groupId>
@@ -45,26 +51,40 @@
 
         <dependency>
             <groupId>org.apache.curator</groupId>
-            <artifactId>apache-curator</artifactId>
+            <artifactId>curator-test</artifactId>
             <version>4.0.0</version>
-            <type>pom</type>
         </dependency>
+
         <dependency>
             <groupId>org.apache.curator</groupId>
-            <artifactId>curator-recipes</artifactId>
-            <version>2.7.0</version>
+            <artifactId>curator-x-discovery</artifactId>
+            <version>4.0.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-x-async</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.apache.curator</groupId>-->
+            <!--<artifactId>apache-curator</artifactId>-->
+            <!--<version>4.0.0</version>-->
+            <!--<type>pom</type>-->
+        <!--</dependency>-->
+
 
         <!--<dependency>-->
             <!--<groupId>com.101tec</groupId>-->
             <!--<artifactId>zkclient</artifactId>-->
             <!--<version>0.10</version>-->
         <!--</dependency>-->
-        <dependency>
-            <groupId>com.github.sgroschupf</groupId>
-            <artifactId>zkclient</artifactId>
-            <version>0.1</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.github.sgroschupf</groupId>-->
+            <!--<artifactId>zkclient</artifactId>-->
+            <!--<version>0.1</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
