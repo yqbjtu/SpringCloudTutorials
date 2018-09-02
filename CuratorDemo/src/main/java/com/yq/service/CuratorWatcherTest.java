@@ -42,6 +42,7 @@ public class CuratorWatcherTest {
                         + ", path=[" + data.getPath() + "]"
                         + ", data=[" + new String(data.getData()) + "]"
                         + ", stat=[" + data.getStat() + "]");
+
             }
         });
         watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);

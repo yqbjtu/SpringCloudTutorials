@@ -90,8 +90,6 @@ public class LeaderSelectorService {
         }
     }
 
-
-
     public void watchAllSubList() {
         try
         {
@@ -138,6 +136,9 @@ public class LeaderSelectorService {
         }
     }
 
+    /*
+     自己的任务列表，一致需要关注，然后去执行，并更新对应的状态
+     */
     public void watchMySubList() {
         String instanceId = registration.getInstanceId();
         String myPath = PathConstants.MY_SUB_Path + "/" + instanceId;
