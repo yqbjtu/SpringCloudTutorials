@@ -30,8 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * An example leader selector client. Note that {@link LeaderSelectorListenerAdapter} which
  * has the recommended handling for connection state issues
  */
-public class ExampleClient extends LeaderSelectorListenerAdapter implements Closeable
-{
+public class ExampleClient extends LeaderSelectorListenerAdapter implements Closeable {
     private final String name;
     private final LeaderSelector leaderSelector;
     private final AtomicInteger leaderCount = new AtomicInteger();

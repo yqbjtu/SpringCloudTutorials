@@ -4,13 +4,11 @@ package com.yq.controller;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.yq.service.ZkClientDemo;
+import com.yq.service.CuratorService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,31 +25,17 @@ import java.util.List;
 public class ZKController {
 
    @Autowired
-    ZkClientDemo  zkClient;
+   private CuratorService zkClient;
 
-    @ApiOperation(value = "设置key", notes="set")
-    @ApiImplicitParams({
-
-    })
-    @GetMapping(value = "/init", produces = "application/json;charset=UTF-8")
-    public String init() {
-        log.info("Enter getInit");
-        String value = zkClient.init();
-        JSONObject jsonObj = new JSONObject();
-        jsonObj.put("currentTime", LocalDateTime.now().toString());
-        jsonObj.put("value", value);
-
-        log.info("Exit getInit result={}", jsonObj.toJSONString());
-        return jsonObj.toJSONString();
-    }
 
     @ApiOperation(value = "createNode", notes="post")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "topic", defaultValue = "topic01", value = "topic", required = true, dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "uuid", defaultValue = "A001", value = "uuid", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "content", defaultValue = "topic01", value = "content", required = true, dataType = "string", paramType = "query")
     })
     @GetMapping(value = "/createNode", produces = "application/json;charset=UTF-8")
-    public String createChildNode(@RequestParam String topic) {
-        String value = zkClient.createNode(topic);
+    public String createChildNode(@RequestParam String uuid, @RequestParam String content) {
+        String value = zkClient.createNode(uuid, content);
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
         jsonObj.put("value", value);
@@ -60,11 +44,11 @@ public class ZKController {
 
     @ApiOperation(value = "deleteNode", notes="post")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "topic", defaultValue = "topic01", value = "topic", required = true, dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "uuid", defaultValue = "A001", value = "uuid", required = true, dataType = "string", paramType = "query")
     })
     @GetMapping(value = "/deleteNode", produces = "application/json;charset=UTF-8")
-    public String delChildNode(@RequestParam String topic) {
-        Boolean isDelOk = zkClient.deleteNode(topic);
+    public String delChildNode(@RequestParam String uuid) {
+        Boolean isDelOk = zkClient.deleteNode(uuid);
 
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
@@ -74,11 +58,11 @@ public class ZKController {
 
     @ApiOperation(value = "getData", notes="post")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "topic", defaultValue = "topic01", value = "topic", required = true, dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "path", defaultValue = "/allSubList/A001", value = "path", required = true, dataType = "string", paramType = "query")
     })
     @GetMapping(value = "/getData", produces = "application/json;charset=UTF-8")
-    public String getData(@RequestParam String topic) {
-        String str = zkClient.getData(topic);
+    public String getData(@RequestParam String path) {
+        String str = zkClient.getData(path);
 
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());

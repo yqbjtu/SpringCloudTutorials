@@ -18,15 +18,16 @@ function connect() {
 
     //var sockjs_url = 'http://localhost:8080/websocket';
     //var sockjs_url = '/websocket';
-    var sockjs_url = 'http://127.0.0.1:6604/bullet';
+    //var sockjs_url = 'http://127.0.0.1:6604/bullet';
     //var sockjs_url = 'http://127.0.0.1:6605/websocket';
+    var sockjs_url = 'https://iotblue.c.citic:1443/service/endpointWisely';
     var socket = new SockJS(sockjs_url);
     stompClient = Stomp.over(socket);
     stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
 
-        stompClient.subscribe('/topic/app01', function (greeting) {
+        stompClient.subscribe('/topic/shadow/1efaa46a6eb24c4bbdc6dc78038f27af', function (greeting) {
             console.log("subscribe edbb:" + greeting);
             showGreeting(JSON.parse(greeting.body).content);
         });

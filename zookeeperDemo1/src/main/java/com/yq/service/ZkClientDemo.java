@@ -78,7 +78,6 @@ public class ZkClientDemo {
 
         zkClient.subscribeStateChanges(
                 new  IZkStateListener() {
-
                     @Override
                     public void handleStateChanged(Watcher.Event.KeeperState state) {
                         log.info("handleStateChanged state={}", state.name());
