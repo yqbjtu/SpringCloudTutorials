@@ -24,14 +24,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter implements Closeable
 {
-    private final String name;
+    private final String instanceId;
     private final LeaderSelector leaderSelector;
     private final AtomicInteger leaderCount = new AtomicInteger();
-    CuratorFramework client = null;
+    private CuratorFramework client = null;
+    private volatile boolean isLeader = false;
 
 
-    public MyLeaderSelectorListener(CuratorFramework client, String path, String name) {
-        this.name = name;
+    public MyLeaderSelectorListener(CuratorFramework client, String path, String instanceId) {
+        this.instanceId = instanceId;
+
         this.client = client;
 
         // create a leader selector using the given path for management
@@ -70,8 +72,8 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
       workerA    7
       workerB    9
       workerC    21
-       workerNew  0，  m=37， n=4， 每个worker上平均Math.ceil是（37/4=9.25， 取上限）10， 也就是小于9的不需要平衡了， 取Math.ceil的目的是最大限度减少抖动
-       那么，workerB移除（9小于10）0个任务，  workerC移除（21-10） 11个任务， 最后的结果是， 基本平衡（如果某个节点上特别多，就严重影响平衡了）
+      workerNew  0，  m=37， n=4， 每个worker上平均Math.ceil是（37/4=9.25， 取上限）10， 也就是小于9的不需要平衡了， 取Math.ceil的目的是最大限度减少抖动
+      那么，workerB移除（9小于10）0个任务，  workerC移除（21-10） 11个任务， 最后的结果是， 基本平衡（如果某个节点上特别多，就严重影响平衡了）
       workerA    7
       workerB    9
       workerC    10
@@ -102,8 +104,9 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         // we are now the leader. This method should not return until we want to relinquish leadership
         final int waitSeconds = (int)(5 * Math.random()) + 1;
 
-        System.out.println(name + " is now the leader. Waiting " + waitSeconds + " seconds...");
-        log.info("当前leader是{}。 " + leaderCount.getAndIncrement() + " time(s) before.", name);
+        System.out.println(instanceId + " is now the leader. Waiting " + waitSeconds + " seconds...");
+        log.info("当前leader是{}." + leaderCount.getAndIncrement() + " time(s) before.", instanceId);
+        isLeader = true;
         try
         {
             //观察当前的worker， 有几个实例在工作
@@ -122,7 +125,8 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                         type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695],
                         data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
                     */
-                    log.info("workerList 新增child，需要经现有的任务分配给新child");
+                    log.info("workerList 新增child，需要把现有的任务分配给新child");
+                    processNewWorker(data.getPath());
 
                 }
                 else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
@@ -131,6 +135,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                         data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
                     */
                     log.info("workerList 有child down了，需要接管该child上的任务");
+                    processDownWorker(data.getPath());
 
                 }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
                     log.info("workerList child更新，不用管");
@@ -149,117 +154,210 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         }
         catch ( InterruptedException e )
         {
-            log.info(name + " was interrupted.");
+            log.info(instanceId + " was interrupted.");
             Thread.currentThread().interrupt();
         }
         finally
         {
-            log.info(name + " relinquishing leadership.");
+            log.info(instanceId + " relinquishing leadership.");
         }
     }
 
+    /*
+      path 是新instance的完整路径，例如 /myWorkerList/sub-service-8082-1774221102
+     */
     private void processNewWorker(String path) {
-        String instanceId = path.substring(PathConstants.WORKER_PATH.length());
-        log.info("New instance id is {}. 开始处理新加入的worker", instanceId);
-
-    }
-
-    private  void processDownWorker(String path) {
         String instanceId = path.substring(PathConstants.WORKER_PATH.length() + 1);
-        log.info("Down instance id is {}", instanceId);
+        log.info("newInstance id is {}. 开始处理新加入的worker", instanceId);
 
         String workerSubListPath = PathConstants.MY_SUB_Path + "/" + instanceId;
         try {
-            //检查该worker有哪些任务需要接管
+            //检查该worker的任务路径（/mySubList/instanceId）路径是否创建了
             Stat stat = client.checkExists().forPath(workerSubListPath);
             if(stat == null) {
-                log.info("Down instanceId= {} has no tasks.", instanceId);
+                log.info("create path={} for new instanceId={}", workerSubListPath, instanceId);
+                String tmpPath = client.create().forPath(workerSubListPath);
             }
-            else {
-                List<String> subList = client.getChildren().forPath(workerSubListPath);
-                if (subList != null && subList.size() != 0) {
-                    log.info("Down instanceId={} has {} tasks.", instanceId, subList);
-                    //开始接管这些任务
-                    int workerCount = getAllLiveWorkerCount();
-                    int taskCount = getAllSubListCount();
 
-                    double tmpAvgCount = Math.ceil(taskCount % workerCount);
-                    int avgCount = (int)tmpAvgCount;
-                    log.info("The taskCount={}, workerCount={}, avgCount={}", taskCount, workerCount, avgCount);
+            //开始平均分配这些任务
+            int workerCount = getAllLiveWorkerCount();
+            int taskCount = getAllSubListCount();
 
-                    //先实现最简单的当前这些任务直接分配给所有活着的list
-                    distributeDownSubList2AllListWorker(workerSubListPath, avgCount);
-                }
-                else {
-                    log.info("Down instanceId={} has no tasks or 0 task.", instanceId);
-                }
+            double tmpAvgCount = (double)taskCount / (double)workerCount;
+            int avgTaskCount = (int)Math.ceil(tmpAvgCount);
+            log.info("newInstance taskCount={}, workerCount={}, tmpAvgCount={}, avgCount={}", taskCount, workerCount, tmpAvgCount, avgTaskCount);
 
-            }
+
+            //先实现最简单的当前这些任务直接分配给所有活着的list
+            transferTask2NewWorker(workerSubListPath, avgTaskCount);
         }
         catch (Exception ex) {
-            log.error("check path={}. exception", workerSubListPath, ex);
+            log.error("processNewWorker newInstance={}. exception", instanceId, ex);
         }
     }
 
+    /*
+      path 是, 新加入的任务
+ */
+    public void distributeNewTask2Worker(String uuid, String content) {
+        Map<String, String> taskList = new HashMap<>();
+        taskList.put(uuid, content);
 
-
-    private void distributeDownSubList2AllListWorker(String downPath, int avgTaskCount) {
-        Map<String, String> taskList = getDownWorkerSubList(downPath);
         List<String> liveWorkerList = getAllLiveWorkerList();
 
+        //开始平均分配这些任务
+        int workerCount = getAllLiveWorkerCount();
+        int taskCount = getAllSubListCount();
+
+        double tmpAvgCount = (double)taskCount / (double)workerCount;
+        int avgTaskCount = (int)Math.ceil(tmpAvgCount);
+        log.info("newTask taskCount={}, workerCount={}, tmpAvgCount={}, avgCount={}", taskCount, workerCount, tmpAvgCount, avgTaskCount);
+
         //是否所有活着的worker都到达或者接近平衡了
-        boolean isAllWorkerReachedAvg =true;
         List<String> notReachedAvgWorkerList = new ArrayList<>();
 
         for (String workerPath : liveWorkerList) {
-            //workerPath is like this。 /myWorkerList/sub-service-8082-1135504170
-            // workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
-            String workerId = workerPath.substring(PathConstants.WORKER_PATH.length() + 1);
+            //workerPath is like this。 sub-service-8082-1135504170
+            //workerId is sub-service-8082-1135504170,  its task list is under /mySubList/sub-service-8082-1135504170
+            String workerId = workerPath;
             String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
 
             int currentCount = workerSubList.size();
             if (workerSubList.size() > avgTaskCount) {
-                //从该worker中要转移一部分认出出来到tasklist
-                log.info("Path={} is GT avgCount={}", workerPath, avgTaskCount);
+                //从该worker中要转移一部分task出来到taskList
+                log.info("workerPath={}, currentCount={} is GT avgCount={}", workerPath, currentCount, avgTaskCount);
                 int surplusCount = currentCount - avgTaskCount;
-                Map<String, String> tmpTasklist = new HashMap<>();
+                Map<String, String> tmpTaskList = new HashMap<>();
 
                 Iterator<Map.Entry<String, String>> iterator = workerSubList.entrySet().iterator();
                 while (iterator.hasNext() && (surplusCount != 0)) {
                     Map.Entry<String, String> entry = iterator.next();
                     taskList.put(entry.getKey(), entry.getValue());
-                    tmpTasklist.put(entry.getKey(), entry.getValue());
+                    tmpTaskList.put(entry.getKey(), entry.getValue());
                     surplusCount--;
                     iterator.remove();
                 }
                 //
-                reclaimTaskListFromWorker(workerId, tmpTasklist);
+                reclaimTaskListFromWorker(workerId, tmpTaskList);
             }
             else if (workerSubList.size() < avgTaskCount) {
-                //从tasklist分配任务到该worker中，如果现有的taskList与该worker的list合起来还无法到达tasklist
+                //从tasklist分配任务到该worker中，如果现有的taskList与该worker的list合起来还无法到达avgTaskCount
                 //那就说明后面的worker还会转移一部分任务出来的，因此将worker记录号到notReachedAvgWorkerList
-                log.info("Path={} is GT avgCount={}", workerPath, avgTaskCount);
-                if ( (currentCount + taskList.size()) >= avgTaskCount) {
+                log.info("workerPath={}, currentCount={} is LT avgCount={}", workerPath, currentCount, avgTaskCount);
+                if ((currentCount + taskList.size()) >= avgTaskCount) {
                     int needCount = avgTaskCount - currentCount;
-                    Map<String, String> tmpTasklist = new HashMap<>();
+                    Map<String, String> tmpTaskList = new HashMap<>();
 
-                    Iterator<Map.Entry<String, String>> iterator = workerSubList.entrySet().iterator();
+                    Iterator<Map.Entry<String, String>> iterator = taskList.entrySet().iterator();
                     while (iterator.hasNext() && (needCount != 0)) {
                         Map.Entry<String, String> entry = iterator.next();
-                        tmpTasklist.put(entry.getKey(), entry.getValue());
+                        tmpTaskList.put(entry.getKey(), entry.getValue());
                         needCount--;
                         iterator.remove();
                     }
                     //将tmpTasklist转移给workerId
-                    distributeNewTaskList2Worker(workerId, tmpTasklist);
+                    log.info("新任务到达。 将任务list={}分配到workerId={}上", tmpTaskList, workerId);
+                    distributeNewTaskList2Worker(workerId, tmpTaskList);
                 }
                 else {
                     notReachedAvgWorkerList.add(workerPath);
                 }
             }
             else {
-                log.info("Path={} is equal to avgCount={}", workerPath, avgTaskCount);
+                log.info("workerPath={}, currentCount={} is equal to avgCount={}", workerPath, currentCount,avgTaskCount);
+            }
+        }
+
+        if(notReachedAvgWorkerList.size() != 0 ) {
+            for (String workerPath : notReachedAvgWorkerList) {
+                if (taskList.size() == 0) {
+                    //任务分配完毕，跳出循环
+                    break;
+                }
+                //workerPath is like this。 /myWorkerList/sub-service-8082-1135504170
+                //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
+                String workerId = workerPath.substring(PathConstants.WORKER_PATH.length() + 1);
+                String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+                Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+
+                int currentCount = workerSubList.size();
+                int needCount = avgTaskCount - currentCount;
+                Map<String, String> tmpTasklist = new HashMap<>();
+
+                Iterator<Map.Entry<String, String>> iterator = taskList.entrySet().iterator();
+                while (iterator.hasNext() && (needCount != 0)) {
+                    Map.Entry<String, String> entry = iterator.next();
+                    tmpTasklist.put(entry.getKey(), entry.getValue());
+                    needCount--;
+                    iterator.remove();
+                }
+                //将tmpTasklist转移给workerId
+                distributeNewTaskList2Worker(workerId, tmpTasklist);
+            }
+        }
+    }
+
+
+    /*
+    path 是new worker的全路径， 例如path=[/myWorkerList/sub-service-8082-1774221102],
+     */
+    private void transferTask2NewWorker(String newPath, int avgTaskCount) {
+        Map<String, String> taskList = new HashMap<>();
+        List<String> liveWorkerList = getAllLiveWorkerList();
+
+        //是否所有活着的worker都到达或者接近平衡了
+        List<String> notReachedAvgWorkerList = new ArrayList<>();
+
+        for (String workerPath : liveWorkerList) {
+            //workerPath is like this。 sub-service-8082-1135504170
+            //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
+            String workerId = workerPath;
+            String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+            Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+
+            int currentCount = workerSubList.size();
+            if (workerSubList.size() > avgTaskCount) {
+                //从该worker中要转移一部分task出来到taskList
+                log.info("workerPath={}, currentCount={} is GT avgCount={}", workerPath, currentCount, avgTaskCount);
+                int surplusCount = currentCount - avgTaskCount;
+                Map<String, String> tmpTaskList = new HashMap<>();
+
+                Iterator<Map.Entry<String, String>> iterator = workerSubList.entrySet().iterator();
+                while (iterator.hasNext() && (surplusCount != 0)) {
+                    Map.Entry<String, String> entry = iterator.next();
+                    taskList.put(entry.getKey(), entry.getValue());
+                    tmpTaskList.put(entry.getKey(), entry.getValue());
+                    surplusCount--;
+                    iterator.remove();
+                }
+                //
+                reclaimTaskListFromWorker(workerId, tmpTaskList);
+            }
+            else if (workerSubList.size() < avgTaskCount) {
+                //从tasklist分配任务到该worker中，如果现有的taskList与该worker的list合起来还无法到达avgTaskCount
+                //那就说明后面的worker还会转移一部分任务出来的，因此将worker记录号到notReachedAvgWorkerList
+                log.info("workerPath={}, currentCount={} is LT avgCount={}", workerPath, currentCount, avgTaskCount);
+                if ((currentCount + taskList.size()) >= avgTaskCount) {
+                    int needCount = avgTaskCount - currentCount;
+                    Map<String, String> tmpTaskList = new HashMap<>();
+
+                    Iterator<Map.Entry<String, String>> iterator = taskList.entrySet().iterator();
+                    while (iterator.hasNext() && (needCount != 0)) {
+                        Map.Entry<String, String> entry = iterator.next();
+                        tmpTaskList.put(entry.getKey(), entry.getValue());
+                        needCount--;
+                        iterator.remove();
+                    }
+                    //将tmpTasklist转移给workerId
+                    distributeNewTaskList2Worker(workerId, tmpTaskList);
+                }
+                else {
+                    notReachedAvgWorkerList.add(workerPath);
+                }
+            }
+            else {
+                log.info("workerPath={}, currentCount={} is equal to avgCount={}", workerPath, currentCount, avgTaskCount);
             }
         }
 
@@ -279,7 +377,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                 int needCount = avgTaskCount - currentCount;
                 Map<String, String> tmpTasklist = new HashMap<>();
 
-                Iterator<Map.Entry<String, String>> iterator = workerSubList.entrySet().iterator();
+                Iterator<Map.Entry<String, String>> iterator = taskList.entrySet().iterator();
                 while (iterator.hasNext() && (needCount != 0)) {
                     Map.Entry<String, String> entry = iterator.next();
                     tmpTasklist.put(entry.getKey(), entry.getValue());
@@ -292,6 +390,137 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         }
     }
 
+    /*
+     path 是down的worker的全路径， 例如path=[/myWorkerList/sub-service-8082-1774221102],
+     */
+    private  void processDownWorker(String path) {
+        String instanceId = path.substring(PathConstants.WORKER_PATH.length() + 1);
+        log.info("DownInstance id is {}", instanceId);
+
+        String workerSubListPath = PathConstants.MY_SUB_Path + "/" + instanceId;
+        try {
+            //检查该worker有哪些任务需要接管
+            Stat stat = client.checkExists().forPath(workerSubListPath);
+            if(stat == null) {
+                log.info("DownInstance={} has no tasks.", instanceId);
+            }
+            else {
+                List<String> subList = client.getChildren().forPath(workerSubListPath);
+                if (subList != null && subList.size() != 0) {
+                    log.info("DownInstance={} has {} tasks.", instanceId, subList);
+                    //开始接管这些任务
+                    int workerCount = getAllLiveWorkerCount();
+                    int taskCount = getAllSubListCount();
+
+                    double tmpAvgCount = (double)taskCount / (double)workerCount;
+                    int avgTaskCount = (int)Math.ceil(tmpAvgCount);
+                    log.info("DownInstance taskCount={}, workerCount={}, tmpAvgCount={}, avgCount={}", taskCount, workerCount, tmpAvgCount, avgTaskCount);
+
+                    //先实现最简单的当前这些任务直接分配给所有活着的list
+                    distributeDownSubList2AllListWorker(workerSubListPath, avgTaskCount);
+                }
+                else {
+                    log.info("DownInstance={} has no tasks or 0 task.", instanceId);
+                }
+
+            }
+        }
+        catch (Exception ex) {
+            log.error("processDownWorker path={}. exception", workerSubListPath, ex);
+        }
+    }
+
+
+
+    private void distributeDownSubList2AllListWorker(String downPath, int avgTaskCount) {
+        Map<String, String> taskList = getDownWorkerSubList(downPath);
+        List<String> liveWorkerList = getAllLiveWorkerList();
+
+        //是否所有活着的worker都到达或者接近平衡了
+        boolean isAllWorkerReachedAvg =true;
+        List<String> notReachedAvgWorkerList = new ArrayList<>();
+
+        for (String workerPath : liveWorkerList) {
+            //workerPath is like this。 sub-service-8082-1135504170
+            //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
+            String workerId = workerPath;
+            String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+            Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+
+            int currentCount = workerSubList.size();
+            if (workerSubList.size() > avgTaskCount) {
+                //从该worker中要转移一部分出来到taskList
+                log.info("workerPath={} is GT avgCount={}", workerPath, avgTaskCount);
+                int surplusCount = currentCount - avgTaskCount;
+                Map<String, String> tmpTaskList = new HashMap<>();
+
+                Iterator<Map.Entry<String, String>> iterator = workerSubList.entrySet().iterator();
+                while (iterator.hasNext() && (surplusCount != 0)) {
+                    Map.Entry<String, String> entry = iterator.next();
+                    taskList.put(entry.getKey(), entry.getValue());
+                    tmpTaskList.put(entry.getKey(), entry.getValue());
+                    surplusCount--;
+                    iterator.remove();
+                }
+                //从该worker上将task移除
+                reclaimTaskListFromWorker(workerId, tmpTaskList);
+            }
+            else if (workerSubList.size() < avgTaskCount) {
+                //从tasklist分配任务到该worker中，如果现有的taskList与该worker的list合起来还无法到达avgTaskCount
+                //那就说明后面的worker还会转移一部分任务出来的，因此将worker记录号到notReachedAvgWorkerList
+                log.info("workerPath={} is LT avgCount={}", workerPath, avgTaskCount);
+                if ( (currentCount + taskList.size()) >= avgTaskCount) {
+                    int needCount = avgTaskCount - currentCount;
+                    Map<String, String> tmpTasklist = new HashMap<>();
+
+                    Iterator<Map.Entry<String, String>> iterator = taskList.entrySet().iterator();
+                    while (iterator.hasNext() && (needCount != 0)) {
+                        Map.Entry<String, String> entry = iterator.next();
+                        tmpTasklist.put(entry.getKey(), entry.getValue());
+                        needCount--;
+                        iterator.remove();
+                    }
+                    //将tmpTasklist转移给workerId
+                    distributeNewTaskList2Worker(workerId, tmpTasklist);
+                }
+                else {
+                    notReachedAvgWorkerList.add(workerPath);
+                }
+            }
+            else {
+                log.info("workerPath={} is equal to avgCount={}", workerPath, avgTaskCount);
+            }
+        }
+
+        if(notReachedAvgWorkerList.size() != 0 ) {
+            for (String workerPath : notReachedAvgWorkerList) {
+                if (taskList.size() == 0) {
+                    //任务分配完毕，跳出循环
+                    break;
+                }
+                //workerPath is like this。 /myWorkerList/sub-service-8082-1135504170
+                //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
+                String workerId = workerPath.substring(PathConstants.WORKER_PATH.length() + 1);
+                String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+                Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+
+                int currentCount = workerSubList.size();
+                int needCount = avgTaskCount - currentCount;
+                Map<String, String> tmpTaskList = new HashMap<>();
+
+                Iterator<Map.Entry<String, String>> iterator = taskList.entrySet().iterator();
+                while (iterator.hasNext() && (needCount != 0)) {
+                    Map.Entry<String, String> entry = iterator.next();
+                    tmpTaskList.put(entry.getKey(), entry.getValue());
+                    needCount--;
+                    iterator.remove();
+                }
+                //将tmpTasklist转移给workerId
+                distributeNewTaskList2Worker(workerId, tmpTaskList);
+            }
+        }
+    }
+
     private void distributeNewTaskList2Worker(String workerId,  Map<String, String> newTaskMap) {
         try {
             Iterator<Map.Entry<String, String>> iterator = newTaskMap.entrySet().iterator();
@@ -300,8 +529,8 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                 String uuid = entry.getKey();
                 String content = entry.getValue();
 
-                String pathForWorkerAndUuid = PathConstants.MY_SUB_Path + "" + uuid;
-
+                String pathForWorkerAndUuid = PathConstants.MY_SUB_Path + "/" + workerId + "/"+ uuid;
+                log.info("将任务uuid={}分配到workerId={}上, pathForWorkerAndUuid={}", uuid, workerId, pathForWorkerAndUuid);
                 Stat stat = client.checkExists().forPath(pathForWorkerAndUuid);
                 //理论上如果该uuid 代表的path存在， 那么data应该和content是一致的
                 if (stat != null) {
@@ -390,14 +619,16 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             }
             else {
                 List<String> subList = client.getChildren().forPath(path);
+                log.info("path={} children path list={}", path, subList);
                 if (subList != null && subList.size() != 0) {
                     log.info("path={} has {} children.", path, subList);
+                    //childrenPath is like, A001, A002 ,uuid
                     for(String childrenPath : subList) {
-                        String uuid = childrenPath.substring(childrenPath.lastIndexOf("/") + 1);
-
-                        byte[] existingValue = client.getData().forPath(childrenPath);
+                        String uuid = childrenPath;
+                        String fullPath =  PathConstants.MY_SUB_Path + "/" + instanceId + "/" +  uuid;
+                        byte[] existingValue = client.getData().forPath(fullPath);
                         String content = new String(existingValue,"UTF-8");
-                        log.info("childrenPath={}, uuid={}, content={}", childrenPath, uuid, content);
+                        log.info("fullChildrenPath={}, uuid={}, content={}", fullPath, uuid, content);
 
                         map.put(uuid, content);
                     }
@@ -445,5 +676,9 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         }
 
         return count;
+    }
+
+    public boolean isLeader() {
+        return this.isLeader;
     }
 }

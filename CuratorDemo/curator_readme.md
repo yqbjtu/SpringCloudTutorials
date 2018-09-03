@@ -31,3 +31,9 @@ Detected both log4j-over-slf4j.jar AND slf4j-log4j12.jar on the class path, pree
 
 第二个问题
 在idea启动加入程序参数--spring.profiles.active=dev1就可以变化profile
+
+测试数据
+A001，  ca001
+A002    ca002
+B002    cb002
+B001    cb001

@@ -5,6 +5,7 @@ package com.yq.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.yq.service.CuratorService;
+import com.yq.service.LeaderSelectorService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
@@ -24,14 +25,29 @@ import java.util.List;
 @Slf4j
 public class ZKController {
 
-   @Autowired
-   private CuratorService zkClient;
+    @Autowired
+    private CuratorService zkClient;
 
+    @Autowired
+    private LeaderSelectorService leaderSvc;
+
+    @ApiOperation(value = "getMyList", notes="get")
+    @ApiImplicitParams({
+    })
+    @GetMapping(value = "/getMyList", produces = "application/json;charset=UTF-8")
+    public String getMyList() {
+        List<String> list = leaderSvc.getMySubList();
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        jsonObj.put("list", list);
+        jsonObj.put("instanceId", leaderSvc.getInstanceId());
+        return jsonObj.toJSONString();
+    }
 
     @ApiOperation(value = "createNode", notes="post")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "uuid", defaultValue = "A001", value = "uuid", required = true, dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "content", defaultValue = "topic01", value = "content", required = true, dataType = "string", paramType = "query")
+            @ApiImplicitParam(name = "content", defaultValue = "ca001", value = "content", required = true, dataType = "string", paramType = "query")
     })
     @GetMapping(value = "/createNode", produces = "application/json;charset=UTF-8")
     public String createChildNode(@RequestParam String uuid, @RequestParam String content) {
