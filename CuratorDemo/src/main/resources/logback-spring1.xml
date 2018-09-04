@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level> <!-- 日志过滤级别 -->
+        </filter>
+        <encoder>
+            <!-- 如果编辑器不支持请用普通日志 CONSOLE_LOG_PATTERN-彩色日志 FILE_LOG_PATTERN-普通日志 -->
+            <pattern>%date %-5level [${HOSTNAME} %thread] %caller{1}%msg%n</pattern><!-- 格式化输出 -->
+            <charset>utf8</charset> <!-- 输出编码 -->
+        </encoder>
+    </appender>
+
+    <!-- 文件输出 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level> <!-- 日志过滤级别 -->
+        </filter>
+        <encoder>
+            <!-- 如果编辑器不支持请用普通日志 CONSOLE_LOG_PATTERN-彩色日志 FILE_LOG_PATTERN-普通日志 -->
+            <pattern>%date %-5level [${HOSTNAME} %thread] %caller{1}%msg%n</pattern><!-- 格式化输出 -->
+            <charset>utf8</charset> <!-- 输出编码 -->
+        </encoder>
+        <file>./logs/info1.log</file><!-- 文件存放路径 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/logs/info/%d{yyyy-MM-dd}.log</fileNamePattern><!-- 每天归档 -->
+            <maxHistory>7</maxHistory><!-- 日志存放周期（天） -->
+        </rollingPolicy>
+    </appender>
+    <!-- 错误日志文件输出 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level> <!-- 日志过滤级别 -->
+        </filter>
+        <encoder>
+            <!-- 如果编辑器不支持请用普通日志 CONSOLE_LOG_PATTERN-彩色日志 FILE_LOG_PATTERN-普通日志 -->
+            <pattern>%date %-5level [${HOSTNAME} %thread] %caller{1}%msg%n</pattern><!-- 格式化输出 -->
+            <charset>utf8</charset> <!-- 输出编码 -->
+        </encoder>
+        <file>./logs/error1.log</file><!-- 文件存放路径 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>/logs/error/%d{yyyy-MM-dd}.log</fileNamePattern><!-- 每天归档 -->
+            <maxHistory>7</maxHistory><!-- 日志存放周期（天） -->
+        </rollingPolicy>
+    </appender>
+
+
+
+    <!-- 基础日志输出级别 -->
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+</configuration>

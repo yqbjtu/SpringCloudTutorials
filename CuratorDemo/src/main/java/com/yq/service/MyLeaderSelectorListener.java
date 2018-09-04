@@ -222,6 +222,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             String workerId = workerPath;
             String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+            log.info("从path={}获取workerId={}已有任务列表={}", mySubListPathForWorker, workerId, workerSubList);
 
             int currentCount = workerSubList.size();
             if (workerSubList.size() > avgTaskCount) {
@@ -315,6 +316,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             String workerId = workerPath;
             String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+            log.info("从path={}获取workerId={}已有任务列表={}", mySubListPathForWorker, workerId, workerSubList);
 
             int currentCount = workerSubList.size();
             if (workerSubList.size() > avgTaskCount) {
@@ -446,6 +448,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             String workerId = workerPath;
             String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
+            log.info("从path={}获取workerId={}已有任务列表={}", mySubListPathForWorker, workerId, workerSubList);
 
             int currentCount = workerSubList.size();
             if (workerSubList.size() > avgTaskCount) {
@@ -557,15 +560,16 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                 String uuid = entry.getKey();
                 String content = entry.getValue();
 
-                String pathForWorkerAndUuid = PathConstants.MY_SUB_Path + "" + uuid;
+                String pathForWorkerAndUuid = PathConstants.MY_SUB_Path + "/" + workerId+ "/" + uuid;
 
                 Stat stat = client.checkExists().forPath(pathForWorkerAndUuid);
                 //理论上如果该uuid 应该是存在的
-                if (stat != null) {
-                    log.info("task={} does not exist on workerId={}", uuid,  pathForWorkerAndUuid);
+                if (stat == null) {
+                    log.info("task={} does not exist on pathForWorkerAndUuid={} for workerId={}", uuid,  pathForWorkerAndUuid, workerId);
 
                 } else {
                     client.delete().deletingChildrenIfNeeded().forPath(pathForWorkerAndUuid);
+                    log.info("delete task={} from workerId={} by deleting pathForWorkerAndUuid={}", uuid, workerId, pathForWorkerAndUuid);
                 }
             }
         }
@@ -625,7 +629,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     //childrenPath is like, A001, A002 ,uuid
                     for(String childrenPath : subList) {
                         String uuid = childrenPath;
-                        String fullPath =  PathConstants.MY_SUB_Path + "/" + instanceId + "/" +  uuid;
+                        String fullPath =  path + "/" +  uuid;
                         byte[] existingValue = client.getData().forPath(fullPath);
                         String content = new String(existingValue,"UTF-8");
                         log.info("fullChildrenPath={}, uuid={}, content={}", fullPath, uuid, content);
