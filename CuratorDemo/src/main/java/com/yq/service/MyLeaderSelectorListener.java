@@ -107,6 +107,14 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         System.out.println(instanceId + " is now the leader. Waiting " + waitSeconds + " seconds...");
         log.info("当前leader是{}." + leaderCount.getAndIncrement() + " time(s) before.", instanceId);
         isLeader = true;
+
+        /*
+        刚接管了leader后需要，检查一下当前/allSubList和所有有效live worker下面的subList之和是否相等，
+        如果不相等，就需要将差异找出来，凡是存在于/allSubList，但是不存在于mySubList中的，需要分配
+                                        凡是存在于/mySubList，但是不存在于allSubList中的，需要直接删除
+         */
+
+
         try
         {
             //观察当前的worker， 有几个实例在工作
@@ -160,6 +168,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         finally
         {
             log.info(instanceId + " relinquishing leadership.");
+            isLeader = false;
         }
     }
 
