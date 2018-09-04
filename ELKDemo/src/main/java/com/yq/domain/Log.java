@@ -1,15 +1,19 @@
 package com.yq.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -53,7 +57,7 @@ import java.util.List;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(indexName = "iot-test-2018.09.04", type = "logs", shards = 1, replicas = 0)
+@Document(indexName = "a-b-2018.09.04", type = "logs", shards = 1, replicas = 0)
 public class Log {
 
     @Id
@@ -68,7 +72,14 @@ public class Log {
     private String logger_name;
     private String message;
 
-    private String timestamp;
+    private String[] tags;
+    //private int version;
+
+
+//    @Field(type = FieldType.Date, format = DateFormat.date_optional_time) ---timestamp is long
+    @Field(type = FieldType.Date, format = DateFormat.date_time )
+    @JsonProperty(value = "@timestamp")
+    private Date updateDate;
 
 
 }
