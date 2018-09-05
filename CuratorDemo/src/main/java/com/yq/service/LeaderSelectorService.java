@@ -75,20 +75,21 @@ public class LeaderSelectorService {
     }
 
     public void registerMySelf() throws Exception {
-
+        Long threadId = Thread.currentThread().getId();
         String workerPath = PathConstants.WORKER_PATH + "/" + instanceId;
         try {
             Stat stat = client.checkExists().forPath(workerPath);
             if(stat == null) {
                 long currentTime = System.currentTimeMillis();
-                client.create().withMode(CreateMode.EPHEMERAL).forPath(workerPath,String.valueOf(currentTime).getBytes("UTF-8"));
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(workerPath,String.valueOf(currentTime).getBytes("UTF-8"));
+                log.warn("create workerPath={} in registerMySelf. threadId={}", workerPath, threadId);
             }
             else {
-                log.warn("{} has already been registered.", workerPath);
+                log.warn("{} has already been registered. threadId={}", workerPath, threadId);
             }
         }
         catch (Exception ex) {
-            log.error("{} registered. exception", workerPath, ex);
+            log.error("{} registered. threadId={}. exception", workerPath, threadId, ex);
         }
     }
 

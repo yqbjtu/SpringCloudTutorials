@@ -105,10 +105,10 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
     @Override
     public void takeLeadership(CuratorFramework client) throws Exception {
         // we are now the leader. This method should not return until we want to relinquish leadership
-        final int waitSeconds = (int)(1000 * Math.random()) + 1;
+        final int waitSeconds = (int)(1000 * 30 * Math.random()) + 1;
 
         Long threadId = Thread.currentThread().getId();
-        log.info("{} is now the leader. Waiting {} seconds...", instanceId, waitSeconds);
+        log.info("{} is now the leader. Waiting {} seconds..., threadId={}", instanceId, waitSeconds, threadId);
         log.info("当前leader是{}. {} time(s) before. threadId={}", instanceId, leaderCount.getAndIncrement(), threadId);
         isLeader = true;
 
@@ -194,6 +194,9 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         //liveWorkerList与allWorkerListFromMySubList肯定不会为null， 因为新worker需要立刻注册自己并watch自己的任务列表
         List<String> allWorkerListFromMySubList = getAllWorkerListFromMySubList();
 
+        log.info("检查完整性 liveWorkerList={}, allSubList={}, allWorkerListFromMySubList={}. threadId={}",
+                liveWorkerList, allSubList, allWorkerListFromMySubList, threadId);
+
         //活着的worker们拥有的所有任务
         List<String> allLiveWorkerHoldSubList = new ArrayList<>();
         //down的worker们用户的所有任务
@@ -211,6 +214,8 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                 deleteWorkerFromMySubList(workerId);
             }
         }
+        log.info("检查完整性 allLiveWorkerHoldSubList={}, allDownWorkerHoldSubList={}, threadId={}",
+                allLiveWorkerHoldSubList, allDownWorkerHoldSubList, threadId);
 
         //遍历/mySubList，如果该worker下面的任务在/allSubList中，从/allSubList中移除该任务，
         //                如果该worker下面的任务不在allSubList中，取消该task
@@ -218,42 +223,68 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         // 这样taskA存在于/mySubList/instanceX/taskA, 但是不存在与/allSubList中
 
         //存在于allSubList，但是不能存在于allLiveWorkerHoldSubList中的额，也表示任务应该是被执行的
-        for(String uuid : allSubList ) {
+        Iterator<String> itr = allSubList.iterator();
+        List<String> allNewWorkerHoldSubList = new ArrayList<>();
+        while(itr.hasNext()){
             //使用index效率更高，因为后面使用remove
+            String uuid = itr.next();
             int index = allLiveWorkerHoldSubList.indexOf(uuid);
             if (index == -1) {
-                //取消该任务，根据uuid即可
-                log.info("切换leader期间增加的新任务uuid={} will be executed. 正被分配（留在allSubList变量即可）. threadId={}", uuid, threadId);
+                //取消该任务，根据uuid即可, 但是标记为一斤更新了对应的记录
+                allNewWorkerHoldSubList.add(uuid);
+                log.info("切换leader期间增加的新任务uuid={} will be executed. 正被分配（留在allOldWorkerHoldSubList变量即可）. threadId={}", uuid, threadId);
             }
             else {
-                allSubList.remove(index);
-                log.info("uuid={} has already been executed. 从allSubList变量移除。 threadId={}", uuid, threadId);
+                itr.remove();
+                log.info("uuid={} has already been executed. 从allSubList变量移除.  threadId={}", uuid, threadId);
             }
         }
 
+        log.info("新任务列表allNewWorkerHoldSubList={}。 threadId={}", allNewWorkerHoldSubList, threadId);
         //存在于allDownWorkerHoldSubList， 但是不能存在于allSubList中的额，就是被取消的
+        List<String> allOldSubList = new ArrayList<>();
+        List<String> allCancelledSubList = new ArrayList<>();
         for(String uuid : allDownWorkerHoldSubList) {
             //使用index效率更高，因为后面使用remove
             int index = allSubList.indexOf(uuid);
             if (index == -1) {
                 //取消该任务，根据uuid即可
+                allCancelledSubList.add(uuid);
                 log.info("切换leader期间取消的任务uuid={} will be cancelled. 正被取消. threadId={}", uuid, threadId);
             }
             else {
                 log.info("uuid={} 留在allSubList变量， 将被分配执行. threadId={}", uuid, threadId);
+                allOldSubList.add(uuid);
+                allSubList.remove(index);
             }
         }
+        log.info("老任务列表allOldSubList={}（已经去除被取消的）. 被取消的任务列表allCancelledSubList={}, threadId={}",
+                allOldSubList, allCancelledSubList, threadId);
 
-        //处理还剩余在allSubList的任务，这些任务就是所有的worker都down机期间，其他系统新添加任务。
+        //处理还剩余在allSubList的任务，这些任务就是所有的worker都down机期间，其他系统全新添加任务。
         if(allSubList.size() != 0) {
             for (String uuid : allSubList) {
                 String content = getContent(uuid);
                 if (StringUtils.isNotBlank(content)) {
-                    log.info("切换leader期间分配的新任务uuid={} has content={}. 分配给活着的worker。 threadId={}", uuid, content, threadId);
+                    log.info("切换leader期间分配的新任务uuid={} has content={}. 分配给活着的worker并更新记录. threadId={}",
+                            uuid, content, threadId);
                     distributeNewTask2Worker(uuid, content);
                 }
                 else {
-                    log.error("uuid={} has no valid content. content={}.threadId={}", uuid, content,threadId);
+                    log.error("uuid={} has no valid content. content={}. threadId={}", uuid, content,threadId);
+                }
+            }
+        }
+
+        if(allOldSubList.size() != 0) {
+            for (String uuid : allOldSubList) {
+                String content = getContent(uuid);
+                if (StringUtils.isNotBlank(content)) {
+                    log.info("切换leader期间原理的老任务uuid={} has content={}. 分配给活着的worker. threadId={}", uuid, content, threadId);
+                    distributeNewTask2Worker(uuid, content);
+                }
+                else {
+                    log.error("uuid={} has no valid content. content={}. threadId={}", uuid, content,threadId);
                 }
             }
         }
@@ -318,15 +349,16 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
       path是新worker整路径，例如 /myWorkerList/sub-service-8082-1774221102
      */
     public void processNewWorker(String path) {
+        Long threadId = Thread.currentThread().getId();
         String instanceId = path.substring(PathConstants.WORKER_PATH.length() + 1);
-        log.info("newInstance id is {}. 开始处理新加入的worker", instanceId);
+        log.info("newInstance id={}. 开始处理新加入的worker. threadId={}", instanceId, threadId);
 
         String workerSubListPath = PathConstants.MY_SUB_PATH + "/" + instanceId;
         try {
             //检查该worker的任务路径（/mySubList/instanceId）路径是否创建了
             Stat stat = client.checkExists().forPath(workerSubListPath);
             if(stat == null) {
-                log.info("create path={} for new instanceId={}", workerSubListPath, instanceId);
+                log.info("create path={} for new instanceId={}, threadId={}", workerSubListPath, instanceId, threadId);
                 String tmpPath = client.create().forPath(workerSubListPath);
             }
 
@@ -336,14 +368,15 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
 
             double tmpAvgCount = (double)taskCount / (double)workerCount;
             int avgTaskCount = (int)Math.ceil(tmpAvgCount);
-            log.info("newInstance taskCount={}, workerCount={}, tmpAvgCount={}, avgCount={}", taskCount, workerCount, tmpAvgCount, avgTaskCount);
+            log.info("newInstance taskCount={}, workerCount={}, tmpAvgCount={}, avgCount={}, threadId={}",
+                    taskCount, workerCount, tmpAvgCount, avgTaskCount, threadId);
 
 
             //先实现最简单的当前这些任务直接分配给所有活着的list
             transferTask2NewWorker(workerSubListPath, avgTaskCount);
         }
         catch (Exception ex) {
-            log.error("processNewWorker newInstance={}. exception", instanceId, ex);
+            log.error("processNewWorker newInstance={}. threadId={}. exception", instanceId, threadId, ex);
         }
     }
 
