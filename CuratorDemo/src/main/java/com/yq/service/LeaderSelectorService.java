@@ -8,6 +8,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import org.apache.curator.framework.recipes.leader.Participant;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.CreateMode;
@@ -19,8 +20,10 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Simple to Introduction
@@ -60,6 +63,7 @@ public class LeaderSelectorService {
 
             //leader选举完毕再观察总的任务列表
             watchAllSubList();
+            watchWorkerList();
 
             System.out.println("Press enter/return to quit\n");
             new BufferedReader(new InputStreamReader(System.in)).readLine();
@@ -97,6 +101,7 @@ public class LeaderSelectorService {
                     true    // if cache data
             );
             watcher.getListenable().addListener((client1, event) -> {
+                Long threadId = Thread.currentThread().getId();
                 ChildData data = event.getData();
                 if (data == null) {
                     System.out.println("No data in event[" + event + "]");
@@ -110,15 +115,16 @@ public class LeaderSelectorService {
                         /* 新增加了哪个任务，很多就知道了
                         type=[CHILD_ADDED], path=[/allSubList/A001], data=[ca001], stat=[1534,1534,1535953560268,1535953560268,0,0,0,0,5,0,1534
                         */
-                        log.info("ALL_SUB_PATH 新增task，需要当前leader分配task给worker");
+                        log.info("ALL_SUB_PATH 新增task，需要当前leader分配task给worker. threadId={}", threadId);
                         if(selector.isLeader()) {
                             String uuid = data.getPath().substring(PathConstants.ALL_SUB_PATH.length() +1);
                             String content = new String(data.getData());
-                            log.info("InstanceId={} is leader now,开始处理新task, uuid={}, content={}", instanceId, uuid, content);
+                            log.info("InstanceId={} is leader now,开始处理新task, uuid={}, content={}, threadId={}",
+                                    instanceId, uuid, content, threadId);
                             selector.distributeNewTask2Worker(uuid, content);
                         }
                         else {
-                            log.info("InstanceId={} is not leader, 不用处理", instanceId);
+                            log.info("InstanceId={} is not leader, 不用处理. threadId={}", instanceId, threadId);
                         }
                     }
                     else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
@@ -128,10 +134,10 @@ public class LeaderSelectorService {
                         log.info("ALL_SUB_PATH 有task取消了，需要执行该task的worker进行更新, 也就是所有的worker都需要自己检查一下该任务是否在自己手上");
                         String uuid = data.getPath().substring(PathConstants.ALL_SUB_PATH.length() + 1);
                         String content = new String(data.getData());
-                        log.info("开始处理取消的task, instanceId={}, uuid={}, content={}", instanceId, uuid, content);
+                        log.info("开始处理取消的task, instanceId={}, uuid={}, content={}, threadId={}", instanceId, uuid, content, threadId);
                         processCancelledTask(uuid);
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
-                        log.info("ALL_SUB_PATH task更新，不用管");
+                        log.info("ALL_SUB_PATH task更新，不用管. threadId={}", threadId);
                     } else {
                         log.info("Receive event: "
                                 + "type=[" + event.getType() + "]"
@@ -151,7 +157,7 @@ public class LeaderSelectorService {
     }
 
     public void processCancelledTask(String uuid) {
-        String workerTaskPath = PathConstants.MY_SUB_Path + "/" + instanceId + "/" + uuid;
+        String workerTaskPath = PathConstants.MY_SUB_PATH + "/" + instanceId + "/" + uuid;
         try {
             //检查该worker是否有任务uuid
             Stat stat = client.checkExists().forPath(workerTaskPath);
@@ -172,7 +178,7 @@ public class LeaderSelectorService {
      */
     public void watchMySubList() {
         String instanceId = registration.getInstanceId();
-        String myPath = PathConstants.MY_SUB_Path + "/" + instanceId;
+        String myPath = PathConstants.MY_SUB_PATH + "/" + instanceId;
         try {
             PathChildrenCache watcher = new PathChildrenCache(
                     client,
@@ -189,7 +195,7 @@ public class LeaderSelectorService {
                         type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695/A002],
                         data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
                         */
-                        String uuid = data.getPath().substring(PathConstants.MY_SUB_Path.length() + 1 + instanceId.length() + 1);
+                        String uuid = data.getPath().substring(PathConstants.MY_SUB_PATH.length() + 1 + instanceId.length() + 1);
                         String content = new String(data.getData());
                         log.info("我的任务新增一个task，需要执行该task 执行更新, uuid={}, content={}", uuid, content);
                     }
@@ -198,7 +204,7 @@ public class LeaderSelectorService {
                         type=[CHILD_REMOVED], path=[/myWorkerList/sub-service-8082-1774221102],
                         data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
                         */
-                        String uuid = data.getPath().substring(PathConstants.MY_SUB_Path.length() +1);
+                        String uuid = data.getPath().substring(PathConstants.MY_SUB_PATH.length() +1);
                         String content = new String(data.getData());
                         log.info("我的任务取消一个task，需要执行该task 取消更新uuid={}, content={}", uuid, content);
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
@@ -221,11 +227,78 @@ public class LeaderSelectorService {
         }
     }
 
+    private void watchWorkerList() {
+        try
+        {
+            //观察当前的worker， 有几个实例在工作
+            PathChildrenCache watcher = new PathChildrenCache(
+                    client,
+                    PathConstants.WORKER_PATH,
+                    true    // if cache data
+            );
+            watcher.getListenable().addListener((client1, event) -> {
+                Long threadId = Thread.currentThread().getId();
+                ChildData data = event.getData();
+                if (data == null) {
+                    System.out.println("No data in event[" + event + "]");
+                } else {
+                    if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
+                    /*
+                        type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695],
+                        data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
+                    */
+
+                        String path = data.getPath();
+                        if (selector.getLeaderSelector().hasLeadership()) {
+                            selector.processNewWorker(data.getPath());
+                            log.info("新增workerId={}，workerId={}是leader,需要让其他活着的worker接管该worker上的任务. threadId={}",
+                                    path, instanceId, Thread.currentThread().getId());
+                        }
+                        else {
+                            log.info("新增workerId={}, workerId={}不是leader，不用处理. threadId={}",
+                                    path, instanceId, Thread.currentThread().getId());
+                        }
+                    }
+                    else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
+                    /* 哪个worker down了，非常清楚就知道了
+                        type=[CHILD_REMOVED], path=[/myWorkerList/sub-service-8082-1774221102],
+                        data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
+                    */
+                        String path = data.getPath();
+                        if (selector.getLeaderSelector().hasLeadership()) {
+                            selector.processDownWorker(data.getPath());
+                            log.info("workerId={} down了，workerId={}是leader,需要让其他活着的worker接管该worker上的任务. threadId={}",
+                                    path, instanceId,Thread.currentThread().getId());
+                        }
+                        else {
+                            log.info("workerId={} down了，workerId={}不是leader，不用处理. threadId={}",
+                                    path, instanceId, Thread.currentThread().getId());
+                        }
+
+                    }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
+                        log.info("workerList child更新，不用管. threadId={}", threadId);
+                    } else {
+                        log.info("Receive event: "
+                                + "type=[" + event.getType() + "]"
+                                + ", path=[" + data.getPath() + "]"
+                                + ", data=[" + new String(data.getData()) + "]"
+                                + ", stat=[" + data.getStat() + "]");
+                    }
+                }
+            });
+            watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+            log.info("Register zk watcher 观察workerList successfully!");
+        }
+        catch (Exception ex)
+        {
+            log.info(instanceId + " has exception.", ex);
+        }
+    }
     /*
      自己的任务列表
      */
     public List<String> getMySubList() {
-        String workerSubListPath = PathConstants.MY_SUB_Path + "/" + instanceId;
+        String workerSubListPath = PathConstants.MY_SUB_PATH + "/" + instanceId;
         List<String> subList = null;
         try
         {
@@ -237,5 +310,27 @@ public class LeaderSelectorService {
         }
 
         return subList;
+    }
+
+    public Participant getCurrentLeader() {
+        Participant leader = null;
+        try {
+            leader = selector.getLeaderSelector().getLeader();
+        }
+        catch (Exception ex) {
+            log.error("Getting current leader exception", ex);
+        }
+        return  leader;
+    }
+
+    public Collection<Participant> getAllParticipants() {
+        Collection<Participant> allParticipants = null;
+        try {
+            allParticipants = selector.getLeaderSelector().getParticipants();
+        }
+        catch (Exception ex) {
+            log.error("Getting allParticipants exception", ex);
+        }
+        return  allParticipants;
     }
 }

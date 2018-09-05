@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.curator.framework.recipes.leader.Participant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 
@@ -31,7 +33,7 @@ public class ZKController {
     @Autowired
     private LeaderSelectorService leaderSvc;
 
-    @ApiOperation(value = "getMyList", notes="get")
+    @ApiOperation(value = "getMyList current uuid", notes="get")
     @ApiImplicitParams({
     })
     @GetMapping(value = "/getMyList", produces = "application/json;charset=UTF-8")
@@ -40,6 +42,32 @@ public class ZKController {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
         jsonObj.put("list", list);
+        jsonObj.put("instanceId", leaderSvc.getInstanceId());
+        return jsonObj.toJSONString();
+    }
+
+    @ApiOperation(value = "getLeader", notes="get")
+    @ApiImplicitParams({
+    })
+    @GetMapping(value = "/getLeader", produces = "application/json;charset=UTF-8")
+    public String getLeader() {
+        Participant participant = leaderSvc.getCurrentLeader();
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        jsonObj.put("leader", participant);
+        jsonObj.put("instanceId", leaderSvc.getInstanceId());
+        return jsonObj.toJSONString();
+    }
+
+    @ApiOperation(value = "getMyList current uuid", notes="get")
+    @ApiImplicitParams({
+    })
+    @GetMapping(value = "/getAll", produces = "application/json;charset=UTF-8")
+    public String getAllParticipants() {
+        Collection<Participant>  allParticipants = leaderSvc.getAllParticipants();
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        jsonObj.put("AllParticipants", allParticipants);
         jsonObj.put("instanceId", leaderSvc.getInstanceId());
         return jsonObj.toJSONString();
     }

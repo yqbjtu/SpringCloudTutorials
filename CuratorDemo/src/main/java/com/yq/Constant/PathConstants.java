@@ -28,7 +28,7 @@ public class PathConstants {
        路径， /mySubList/SVCA/uuidB. 内容为 axzruuy/noys/iue
        路径， /mySubList/SVCC/uuidC. 内容为 aytimxf/pnkyt/lyx
     */
-    public static final String MY_SUB_Path = "/mySubList";
+    public static final String MY_SUB_PATH = "/mySubList";
 
 
     public static final String LEADER_PATH = "/worker/leader";

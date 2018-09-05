@@ -33,7 +33,14 @@ Detected both log4j-over-slf4j.jar AND slf4j-log4j12.jar on the class path, pree
 在idea启动加入程序参数--spring.profiles.active=dev1就可以变化profile
 
 测试数据
-A001，  ca001
-A002    ca002
-B002    cb002
-B001    cb001
+A001，  cass001a
+A002    cass002a
+B002    cbss002b
+B001    cbss001b
+
+create /allSubList/D001 "cbss001d"
+set /allSubList/D001 "cbss001d"
+set /allSubList/D002 "cbss002d"
+set /allSubList/D003 "cbss003d"
+
+出现新问题，当新的sub加入时没有一个worker是leader

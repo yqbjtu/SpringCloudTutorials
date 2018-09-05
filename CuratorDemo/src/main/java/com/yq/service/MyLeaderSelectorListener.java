@@ -2,7 +2,9 @@
 package com.yq.service;
 
 import com.yq.Constant.PathConstants;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
@@ -22,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
+@Data
 public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter implements Closeable
 {
     private final String instanceId;
@@ -42,7 +45,8 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         leaderSelector = new LeaderSelector(client, path, this);
 
         // for most cases you will want your instance to requeue when it relinquishes leadership
-        //leaderSelector.autoRequeue();
+        leaderSelector.autoRequeue();
+
     }
 
     public void start() throws IOException
@@ -99,65 +103,67 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
      如何判断自己的是刚启动的leader，还是别人down机后的leader？
      */
     @Override
-    public void takeLeadership(CuratorFramework client) throws Exception
-    {
+    public void takeLeadership(CuratorFramework client) throws Exception {
         // we are now the leader. This method should not return until we want to relinquish leadership
-        final int waitSeconds = (int)(5 * Math.random()) + 1;
+        final int waitSeconds = (int)(1000 * Math.random()) + 1;
 
-        System.out.println(instanceId + " is now the leader. Waiting " + waitSeconds + " seconds...");
-        log.info("当前leader是{}." + leaderCount.getAndIncrement() + " time(s) before.", instanceId);
+        Long threadId = Thread.currentThread().getId();
+        log.info("{} is now the leader. Waiting {} seconds...", instanceId, waitSeconds);
+        log.info("当前leader是{}. {} time(s) before. threadId={}", instanceId, leaderCount.getAndIncrement(), threadId);
         isLeader = true;
 
         /*
-        刚接管了leader后需要，检查一下当前/allSubList和所有有效live worker下面的subList之和是否相等，
-        如果不相等，就需要将差异找出来，凡是存在于/allSubList，但是不存在于mySubList中的，需要分配
-                                        凡是存在于/mySubList，但是不存在于allSubList中的，需要直接删除
+        刚接管了leader后需要，检查一下当前/allSubList和所有有效live worker下面的subList之和是否相等，这是所有leader需要完成的任务
+        如果不相等，就需要将差异找出来，凡是存在于/allSubList，但是不存在于mySubList中的，需要分配到worker上
+        凡是存在于/mySubList，但是不存在于allSubList中的，需要取消订阅，因为该任务要么是down机期间，别人取消的，要么是不应该有的任务
          */
 
+        leaderCheckIntegrity();
 
         try
         {
-            //观察当前的worker， 有几个实例在工作
-            PathChildrenCache watcher = new PathChildrenCache(
-                    client,
-                    PathConstants.WORKER_PATH,
-                    true    // if cache data
-            );
-            watcher.getListenable().addListener((client1, event) -> {
-                ChildData data = event.getData();
-                if (data == null) {
-                    System.out.println("No data in event[" + event + "]");
-                } else {
-                if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
-                    /*
-                        type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695],
-                        data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
-                    */
-                    log.info("workerList 新增child，需要把现有的任务分配给新child");
-                    processNewWorker(data.getPath());
-
-                }
-                else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
-                    /* 哪个worker down了，非常清楚就知道了
-                        type=[CHILD_REMOVED], path=[/myWorkerList/sub-service-8082-1774221102],
-                        data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
-                    */
-                    log.info("workerList 有child down了，需要接管该child上的任务");
-                    processDownWorker(data.getPath());
-
-                }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
-                    log.info("workerList child更新，不用管");
-                } else {
-                    log.info("Receive event: "
-                            + "type=[" + event.getType() + "]"
-                            + ", path=[" + data.getPath() + "]"
-                            + ", data=[" + new String(data.getData()) + "]"
-                            + ", stat=[" + data.getStat() + "]");
-                }
-                }
-            });
-            watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-            log.info("Register zk watcher 工作实例 successfully!");
+//            //观察当前的worker， 有几个实例在工作
+//            PathChildrenCache watcher = new PathChildrenCache(
+//                    client,
+//                    PathConstants.WORKER_PATH,
+//                    true    // if cache data
+//            );
+//            watcher.getListenable().addListener((client1, event) -> {
+//
+//                ChildData data = event.getData();
+//                if (data == null) {
+//                    System.out.println("No data in event[" + event + "]");
+//                } else {
+//                if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
+//                    /*
+//                        type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695],
+//                        data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
+//                    */
+//                    log.info("workerList 新增child，需要把现有的任务分配给新child. threadId={}", Thread.currentThread().getId());
+//                    processNewWorker(data.getPath());
+//
+//                }
+//                else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
+//                    /* 哪个worker down了，非常清楚就知道了
+//                        type=[CHILD_REMOVED], path=[/myWorkerList/sub-service-8082-1774221102],
+//                        data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
+//                    */
+//                    log.info("workerList 有child down了，需要接管该child上的任务. threadId={}", Thread.currentThread().getId());
+//                    processDownWorker(data.getPath());
+//
+//                }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
+//                    log.info("workerList child更新，不用管. threadId={}", threadId);
+//                } else {
+//                    log.info("Receive event: "
+//                            + "type=[" + event.getType() + "]"
+//                            + ", path=[" + data.getPath() + "]"
+//                            + ", data=[" + new String(data.getData()) + "]"
+//                            + ", stat=[" + data.getStat() + "]");
+//                }
+//                }
+//            });
+//            watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
+//            log.info("Register zk watcher 工作实例 successfully!");
             Thread.sleep(TimeUnit.SECONDS.toMillis(waitSeconds));
         }
         catch ( InterruptedException e )
@@ -171,15 +177,151 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             isLeader = false;
         }
     }
-
     /*
-      path 是新instance的完整路径，例如 /myWorkerList/sub-service-8082-1774221102
+        刚接管了leader后需要，检查一下当前/allSubList和所有有效live worker下面的subList之和是否相等，这是所有leader需要完成的任务
+        如果不相等，就需要将差异找出来，凡是存在于/allSubList，但是不存在于mySubList中的，需要分配到worker上
+        凡是存在于/mySubList，但是不存在于allSubList中的，需要取消订阅，因为该任务要么是down机期间，别人取消的，要么是不应该有的任务
+   */
+
+    private void leaderCheckIntegrity() {
+        //获取所有或者的worker，String格式为sub-service-8082-1135504170
+        Long threadId = Thread.currentThread().getId();
+        List<String> liveWorkerList = getAllLiveWorkerList();
+        List<String> allSubList = getAllSubList();
+        if (allSubList == null) {
+            allSubList = new ArrayList<>();
+        }
+        //liveWorkerList与allWorkerListFromMySubList肯定不会为null， 因为新worker需要立刻注册自己并watch自己的任务列表
+        List<String> allWorkerListFromMySubList = getAllWorkerListFromMySubList();
+
+        //活着的worker们拥有的所有任务
+        List<String> allLiveWorkerHoldSubList = new ArrayList<>();
+        //down的worker们用户的所有任务
+        List<String> allDownWorkerHoldSubList = new ArrayList<>();
+        //从/mySubList下面删除所有已经down的worker
+        for(String workerId : allWorkerListFromMySubList) {
+            if (liveWorkerList.contains(workerId)) {
+                List<String> subList = getMySubListByWorkerId(workerId);
+                allLiveWorkerHoldSubList.addAll(subList);
+            }
+            else {
+                log.info("workerId={} is not live now, delete it. threadId={}", workerId,threadId);
+                List<String> subList = getMySubListByWorkerId(workerId);
+                allDownWorkerHoldSubList.addAll(subList);
+                deleteWorkerFromMySubList(workerId);
+            }
+        }
+
+        //遍历/mySubList，如果该worker下面的任务在/allSubList中，从/allSubList中移除该任务，
+        //                如果该worker下面的任务不在allSubList中，取消该task
+        // 应该是因为所有worker down了之后系统取消该taskA，当时因为所有worker都down了导致对应的worker没有取消任务taskA，而/allSubList中移除了该taskA任务
+        // 这样taskA存在于/mySubList/instanceX/taskA, 但是不存在与/allSubList中
+
+        //存在于allSubList，但是不能存在于allLiveWorkerHoldSubList中的额，也表示任务应该是被执行的
+        for(String uuid : allSubList ) {
+            //使用index效率更高，因为后面使用remove
+            int index = allLiveWorkerHoldSubList.indexOf(uuid);
+            if (index == -1) {
+                //取消该任务，根据uuid即可
+                log.info("切换leader期间增加的新任务uuid={} will be executed. 正被分配（留在allSubList变量即可）. threadId={}", uuid, threadId);
+            }
+            else {
+                allSubList.remove(index);
+                log.info("uuid={} has already been executed. 从allSubList变量移除。 threadId={}", uuid, threadId);
+            }
+        }
+
+        //存在于allDownWorkerHoldSubList， 但是不能存在于allSubList中的额，就是被取消的
+        for(String uuid : allDownWorkerHoldSubList) {
+            //使用index效率更高，因为后面使用remove
+            int index = allSubList.indexOf(uuid);
+            if (index == -1) {
+                //取消该任务，根据uuid即可
+                log.info("切换leader期间取消的任务uuid={} will be cancelled. 正被取消. threadId={}", uuid, threadId);
+            }
+            else {
+                log.info("uuid={} 留在allSubList变量， 将被分配执行. threadId={}", uuid, threadId);
+            }
+        }
+
+        //处理还剩余在allSubList的任务，这些任务就是所有的worker都down机期间，其他系统新添加任务。
+        if(allSubList.size() != 0) {
+            for (String uuid : allSubList) {
+                String content = getContent(uuid);
+                if (StringUtils.isNotBlank(content)) {
+                    log.info("切换leader期间分配的新任务uuid={} has content={}. 分配给活着的worker。 threadId={}", uuid, content, threadId);
+                    distributeNewTask2Worker(uuid, content);
+                }
+                else {
+                    log.error("uuid={} has no valid content. content={}.threadId={}", uuid, content,threadId);
+                }
+            }
+        }
+     }
+
+    private String getContent(String uuid) {
+        String content = null;
+        String taskFullPath = PathConstants.ALL_SUB_PATH + "/" + uuid;
+
+        try {
+            Stat stat = client.checkExists().forPath(taskFullPath);
+            if (stat != null) {
+                byte[] existingValue = client.getData().forPath(taskFullPath);
+                content = new String(existingValue, "UTF-8");
+                log.info("taskFullPath={}, uuid={}, content={}", taskFullPath, uuid, content);
+            } else {
+                log.error("taskFullPath={} does not exist. but it should exist.", taskFullPath);
+            }
+        } catch (Exception ex) {
+            log.info("get taskFullPath={} children exception", taskFullPath, ex);
+        }
+
+        return content;
+    }
+
+    public List<String> getMySubListByWorkerId(String workerId){
+        List<String> subList = null;
+        String workerSubListFullPath = PathConstants.MY_SUB_PATH + "/" + workerId;
+        try {
+            Stat stat = client.checkExists().forPath(workerSubListFullPath);
+            if(stat != null){
+                subList = client.getChildren().forPath(workerSubListFullPath);
+            }
+            else {
+                log.info("workerSubListFullPath={} does not exist.", workerSubListFullPath);
+            }
+        }
+        catch (Exception ex ) {
+            log.info("get workerSubListFullPath={} children exception", workerSubListFullPath, ex);
+        }
+
+        return subList;
+    }
+
+
+    public boolean deleteWorkerFromMySubList(String workerId){
+        Boolean isDelOK = true;
+        String workerSubListFullPath = PathConstants.MY_SUB_PATH + "/" + workerId;
+        try {
+            Stat stat = client.checkExists().forPath(workerSubListFullPath);
+            if(stat != null){
+                client.delete().deletingChildrenIfNeeded().forPath(workerSubListFullPath);
+            }
+        }
+        catch (Exception ex ) {
+            log.info("del workerSubListFullPath={} exception", workerSubListFullPath, ex);
+        }
+
+        return isDelOK;
+    }
+    /*
+      path是新worker整路径，例如 /myWorkerList/sub-service-8082-1774221102
      */
-    private void processNewWorker(String path) {
+    public void processNewWorker(String path) {
         String instanceId = path.substring(PathConstants.WORKER_PATH.length() + 1);
         log.info("newInstance id is {}. 开始处理新加入的worker", instanceId);
 
-        String workerSubListPath = PathConstants.MY_SUB_Path + "/" + instanceId;
+        String workerSubListPath = PathConstants.MY_SUB_PATH + "/" + instanceId;
         try {
             //检查该worker的任务路径（/mySubList/instanceId）路径是否创建了
             Stat stat = client.checkExists().forPath(workerSubListPath);
@@ -229,7 +371,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             //workerPath is like this。 sub-service-8082-1135504170
             //workerId is sub-service-8082-1135504170,  its task list is under /mySubList/sub-service-8082-1135504170
             String workerId = workerPath;
-            String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+            String mySubListPathForWorker = PathConstants.MY_SUB_PATH + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
             log.info("从path={}获取workerId={}已有任务列表={}", mySubListPathForWorker, workerId, workerSubList);
 
@@ -285,10 +427,10 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     //任务分配完毕，跳出循环
                     break;
                 }
-                //workerPath is like this。 /myWorkerList/sub-service-8082-1135504170
+                //workerPath is like this。 sub-service-8082-1135504170
                 //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
-                String workerId = workerPath.substring(PathConstants.WORKER_PATH.length() + 1);
-                String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+                String workerId = workerPath;
+                String mySubListPathForWorker = PathConstants.MY_SUB_PATH + "/" + workerId;
                 Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
 
                 int currentCount = workerSubList.size();
@@ -303,6 +445,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     iterator.remove();
                 }
                 //将tmpTasklist转移给workerId
+                log.info("没到达平均任务。 将任务tmpTasklist={}分配给workerId={}", tmpTasklist, workerId);
                 distributeNewTaskList2Worker(workerId, tmpTasklist);
             }
         }
@@ -323,7 +466,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             //workerPath is like this。 sub-service-8082-1135504170
             //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
             String workerId = workerPath;
-            String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+            String mySubListPathForWorker = PathConstants.MY_SUB_PATH + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
             log.info("从path={}获取workerId={}已有任务列表={}", mySubListPathForWorker, workerId, workerSubList);
 
@@ -378,10 +521,10 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     //任务分配完毕，跳出循环
                     break;
                 }
-                //workerPath is like this。 /myWorkerList/sub-service-8082-1135504170
+                //workerPath is like this。sub-service-8082-1135504170
                 // workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
-                String workerId = workerPath.substring(PathConstants.WORKER_PATH.length() + 1);
-                String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+                String workerId = workerPath;
+                String mySubListPathForWorker = PathConstants.MY_SUB_PATH + "/" + workerId;
                 Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
 
                 int currentCount = workerSubList.size();
@@ -404,11 +547,11 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
     /*
      path 是down的worker的全路径， 例如path=[/myWorkerList/sub-service-8082-1774221102],
      */
-    private  void processDownWorker(String path) {
+    public void processDownWorker(String path) {
         String instanceId = path.substring(PathConstants.WORKER_PATH.length() + 1);
         log.info("DownInstance id is {}", instanceId);
 
-        String workerSubListPath = PathConstants.MY_SUB_Path + "/" + instanceId;
+        String workerSubListPath = PathConstants.MY_SUB_PATH + "/" + instanceId;
         try {
             //检查该worker有哪些任务需要接管
             Stat stat = client.checkExists().forPath(workerSubListPath);
@@ -455,7 +598,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             //workerPath is like this。 sub-service-8082-1135504170
             //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
             String workerId = workerPath;
-            String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+            String mySubListPathForWorker = PathConstants.MY_SUB_PATH + "/" + workerId;
             Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
             log.info("从path={}获取workerId={}已有任务列表={}", mySubListPathForWorker, workerId, workerSubList);
 
@@ -510,10 +653,10 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     //任务分配完毕，跳出循环
                     break;
                 }
-                //workerPath is like this。 /myWorkerList/sub-service-8082-1135504170
+                //workerPath is like this。 sub-service-8082-1135504170
                 //workerId is sub-service-8082-1135504170,  it task list is under /mySubList/sub-service-8082-1135504170
-                String workerId = workerPath.substring(PathConstants.WORKER_PATH.length() + 1);
-                String mySubListPathForWorker = PathConstants.MY_SUB_Path + "/" + workerId;
+                String workerId = workerPath;
+                String mySubListPathForWorker = PathConstants.MY_SUB_PATH + "/" + workerId;
                 Map<String, String> workerSubList = getWorkerSubList(mySubListPathForWorker);
 
                 int currentCount = workerSubList.size();
@@ -541,7 +684,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                 String uuid = entry.getKey();
                 String content = entry.getValue();
 
-                String pathForWorkerAndUuid = PathConstants.MY_SUB_Path + "/" + workerId + "/"+ uuid;
+                String pathForWorkerAndUuid = PathConstants.MY_SUB_PATH + "/" + workerId + "/"+ uuid;
                 log.info("将任务uuid={}分配到workerId={}上, pathForWorkerAndUuid={}", uuid, workerId, pathForWorkerAndUuid);
                 Stat stat = client.checkExists().forPath(pathForWorkerAndUuid);
                 //理论上如果该uuid 代表的path存在， 那么data应该和content是一致的
@@ -569,7 +712,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                 String uuid = entry.getKey();
                 String content = entry.getValue();
 
-                String pathForWorkerAndUuid = PathConstants.MY_SUB_Path + "/" + workerId+ "/" + uuid;
+                String pathForWorkerAndUuid = PathConstants.MY_SUB_PATH + "/" + workerId+ "/" + uuid;
 
                 Stat stat = client.checkExists().forPath(pathForWorkerAndUuid);
                 //理论上如果该uuid 应该是存在的
@@ -588,31 +731,44 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
     }
 
     private List<String> getAllLiveWorkerList() {
-        String path = PathConstants.WORKER_PATH;
-        List<String> liveWorkList = null;
+        List<String> liveWorkList = getChildrenList(PathConstants.WORKER_PATH);
+        return liveWorkList;
+    }
+
+    private List<String> getAllSubList() {
+        List<String> allSubList = getChildrenList(PathConstants.ALL_SUB_PATH);
+        return allSubList;
+    }
+
+    private List<String> getAllWorkerListFromMySubList() {
+        List<String> allWorkerListFromMySubList = getChildrenList(PathConstants.MY_SUB_PATH);
+        return allWorkerListFromMySubList;
+    }
+
+    private List<String> getChildrenList(String parentPath) {
+        List<String> allSubList = null;
         try {
-            Stat stat = client.checkExists().forPath(path);
+            Stat stat = client.checkExists().forPath(parentPath);
             if(stat == null) {
-                log.info("path={} is null. can't check its children path.", path);
+                log.info("parentPath={} is null. can't check its children path.", parentPath);
             }
             else {
-                List<String> workerList = client.getChildren().forPath(path);
+                List<String> workerList = client.getChildren().forPath(parentPath);
                 if (workerList != null && workerList.size() != 0) {
-                    log.info("path={} has {} children.", path, workerList);
-                    liveWorkList = workerList;
+                    log.info("parentPath={} has {} children.", parentPath, workerList);
+                    allSubList = workerList;
                 }
                 else {
-                    log.info("path={} has no child.", path);
+                    log.info("parentPath={} has no child.", parentPath);
                 }
             }
         }
         catch (Exception ex) {
-            log.error("check path={}. exception", path, ex);
+            log.error("check parentPath={}. exception", parentPath, ex);
         }
 
-        return liveWorkList;
+        return allSubList;
     }
-
     /*
      path 是全路径 例如/mySubList/sub-service-8082-1135504170
     */
