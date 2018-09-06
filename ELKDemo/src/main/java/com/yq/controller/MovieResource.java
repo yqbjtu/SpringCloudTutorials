@@ -7,7 +7,14 @@ import com.yq.service.MovieService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -25,9 +32,6 @@ import java.util.Optional;
 public class MovieResource {
 
     private MovieService movieService;
-
-    @Autowired
-    private LogService logService;
 
     @Autowired
     public MovieResource(MovieService movieService) {
@@ -64,25 +68,5 @@ public class MovieResource {
     public ResponseEntity<List<Movie>> findMovieByName(@PathVariable("name") String name) {
         List<Movie> fetchedMovie = movieService.getByName(name);
         return ResponseEntity.ok(fetchedMovie);
-    }
-
-    @ApiOperation(value = "query", notes="private")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "level", value = "level", defaultValue = "INFO", required = true, dataType = "string", paramType = "path")
-    })
-    @GetMapping("/log/{level}")
-    public ResponseEntity<List<Log>> findLogByLeve(@PathVariable("level") String level) {
-        List<Log> fetchedMovie = logService.findByLevel(level);
-        return ResponseEntity.ok(fetchedMovie);
-    }
-
-    @ApiOperation(value = "query by id", notes="private")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "id", required = true, dataType = "string", paramType = "path")
-    })
-    @GetMapping("/log/get-by-id/{id}")
-    public Optional<Log>  findLogMfindById(@PathVariable("id") String id) {
-        Optional<Log> logOptional = logService.findById(id);
-        return logOptional;
     }
 }

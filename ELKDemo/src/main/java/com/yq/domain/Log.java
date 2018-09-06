@@ -57,7 +57,7 @@ import java.util.List;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(indexName = "a-b-2018.09.04", type = "logs", shards = 1, replicas = 0)
+@Document(indexName = "aaa-2018.09.06", type = "logs", shards = 1, replicas = 0)
 public class Log {
 
     @Id
@@ -77,7 +77,7 @@ public class Log {
 
 
 //    @Field(type = FieldType.Date, format = DateFormat.date_optional_time) ---timestamp is long
-    @Field(type = FieldType.Date, format = DateFormat.date_time )
+    @Field(type = FieldType.Date, format = DateFormat.basic_date_time )
     @JsonProperty(value = "@timestamp")
     private Date updateDate;
 
