@@ -8,6 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+
 public class ConsulUserApplication {
 	private static final Logger logger = LoggerFactory.getLogger(ConsulUserApplication.class);
 

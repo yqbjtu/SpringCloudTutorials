@@ -5,20 +5,22 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.yq</groupId>
-    <artifactId>ConsulUserSvc</artifactId>
+    <artifactId>AdminDemo</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.0.1.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <swagger2.version>2.7.0</swagger2.version>
+        <admin.version>2.0.1</admin.version>
     </properties>
 
     <dependencyManagement>
@@ -49,11 +51,20 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+
+
         <dependency>
             <groupId>de.codecentric</groupId>
-            <artifactId>spring-boot-admin-starter-client</artifactId>
-            <version>2.0.1</version>
+            <artifactId>spring-boot-admin-server</artifactId>
+            <version>${admin.version}</version>
         </dependency>
+        <dependency>
+            <groupId>de.codecentric</groupId>
+            <artifactId>spring-boot-admin-server-ui</artifactId>
+            <version>${admin.version}</version>
+        </dependency>
+
+
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -89,17 +100,17 @@
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
-            <version>2.7.0</version>
+            <version>${swagger2.version}</version>
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.7.0</version>
+            <version>${swagger2.version}</version>
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-spring-web</artifactId>
-            <version>2.7.0</version>
+            <version>${swagger2.version}</version>
         </dependency>
     </dependencies>
 
