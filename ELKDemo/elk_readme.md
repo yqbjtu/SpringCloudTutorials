@@ -11,3 +11,4 @@ https://github.com/spring-projects/spring-data-elasticsearch
 org.elasticsearch.transport.NodeDisconnectedException: [][192.168.1.101:9300][cluster:monitor/nodes/liveness] disconnected
 
 升级到
+http://127.0.0.1:9000/swagger-ui.html

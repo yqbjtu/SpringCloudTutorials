@@ -1,7 +1,9 @@
 package com.yq.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +14,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldIndex;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 import java.util.List;
@@ -52,12 +55,11 @@ import java.util.List;
 
 }
  */
-@Getter
-@Setter
+@Data
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(indexName = "aaa-2018.09.06", type = "logs", shards = 1, replicas = 0)
+@Document(indexName = "aaa-2018.07.06", type = "logs", shards = 1, replicas = 0)
 public class Log {
 
     @Id
@@ -77,8 +79,11 @@ public class Log {
 
 
 //    @Field(type = FieldType.Date, format = DateFormat.date_optional_time) ---timestamp is long
-    @Field(type = FieldType.Date, format = DateFormat.basic_date_time )
+   // @Field(type = FieldType.Date, format = DateFormat.basic_date_time )
+    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second )
     @JsonProperty(value = "@timestamp")
+    @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    @DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private Date updateDate;
 
 
