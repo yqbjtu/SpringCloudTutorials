@@ -15,12 +15,11 @@ import org.springframework.context.annotation.Configuration;
 @EnableAutoConfiguration
 @EnableAdminServer
 @EnableDiscoveryClient
-
-public class AdminDemoApp {
-    private static final Logger log = LoggerFactory.getLogger(AdminDemoApp.class);
+public class AdminDemoApplication {
+    private static final Logger log = LoggerFactory.getLogger(AdminDemoApplication.class);
 
     public static void main(String[] args) {
-        SpringApplication.run(AdminDemoApp.class, args);
+        SpringApplication.run(AdminDemoApplication.class, args);
     }
 
 }
