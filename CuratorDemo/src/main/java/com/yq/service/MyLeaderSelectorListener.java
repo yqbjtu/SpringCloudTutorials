@@ -280,7 +280,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             for (String uuid : allOldSubList) {
                 String content = getContent(uuid);
                 if (StringUtils.isNotBlank(content)) {
-                    log.info("切换leader期间原理的老任务uuid={} has content={}. 分配给活着的worker. threadId={}", uuid, content, threadId);
+                    log.info("切换leader期间原来的老任务uuid={} has content={}. 分配给活着的worker. threadId={}", uuid, content, threadId);
                     distributeNewTask2Worker(uuid, content);
                 }
                 else {
