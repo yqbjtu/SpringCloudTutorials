@@ -1,5 +1,6 @@
 package com.yq.filter;
 
+import com.netflix.client.ClientException;
 import com.netflix.hystrix.exception.HystrixTimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.netflix.zuul.filters.route.FallbackProvider;
@@ -27,6 +28,8 @@ class MyFallBackProvider implements FallbackProvider {
         log.error("zuul exception, msg={}", cause.getMessage(), cause);
         if (cause instanceof HystrixTimeoutException) {
             return response(HttpStatus.GATEWAY_TIMEOUT);
+        } else if (cause instanceof ClientException) {
+            return response(HttpStatus.SERVICE_UNAVAILABLE);
         } else {
             return fallbackResponse();
         }
@@ -60,8 +63,9 @@ class MyFallBackProvider implements FallbackProvider {
 
             @Override
             public InputStream getBody() throws IOException {
-                log.error("Zuul MyFallBackProvider");
-                return new ByteArrayInputStream("fallback!".getBytes());
+                log.error("Zuul MyFallBackProvider. msg={}", status.toString());
+                StringBuffer buffer = new StringBuffer("fallback. status").append(status.getReasonPhrase());
+                return new ByteArrayInputStream(buffer.toString().getBytes());
             }
 
             @Override
