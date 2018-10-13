@@ -1,6 +1,7 @@
 package com.yq.service.impl;
 
 import com.yq.service.RedisService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
@@ -19,6 +20,7 @@ import javax.annotation.Resource;
  * @version 2018/8/4 23:00
  */
 @Service
+@Slf4j
 public class RedisServiceImpl implements RedisService {
 
     @Autowired
@@ -41,7 +43,10 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public String getHash(String key, String hashKey) {
         HashOperations<String, String, String> hashOps = this.template.opsForHash();
-        return hashOps.get(key, hashKey);
+
+        String value = hashOps.get(key, hashKey);
+        log.info("getHash() key={},hashKey={}, value={}, threadId={}", key, hashKey, value, Thread.currentThread().getId());
+        return value;
     }
 
     @Override
