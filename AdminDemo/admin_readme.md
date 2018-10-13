@@ -13,3 +13,5 @@ http://localhost:6062
                     <artifactId>spring-boot-admin-starter-server</artifactId>
                     <version>${admin.version}</version>
                 </dependency>
+                  
+http://codecentric.github.io/spring-boot-admin/current/  

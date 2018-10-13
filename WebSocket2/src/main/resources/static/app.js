@@ -27,7 +27,7 @@ function connect() {
         setConnected(true);
         console.log('Connected: ' + frame);
 
-        stompClient.subscribe('/topic/shadow/1efaa46a6eb24c4bbdc6dc78038f27af', function (greeting) {
+        stompClient.subscribe('/topic/pointStatePerPage/f798ae4ff47848ceae100f257a563fcc', function (greeting) {
             console.log("subscribe edbb:" + greeting);
             showGreeting(JSON.parse(greeting.body).content);
         });

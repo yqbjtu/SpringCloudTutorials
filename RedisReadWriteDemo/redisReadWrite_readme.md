@@ -1,6 +1,8 @@
 #redis 多线程读写
 
-http://127.0.0.1:8081/swagger-ui.html
+http://127.0.0.1:8081/swagger-ui.htmlhttps://docs.spring.io/spring-data/redis/docs/1.8.15.RELEASE/reference/html/  
+
+spring boot 1.5.12默认使用的是spring-data-reds 1.8.11  
 
 2018-10-12 17:43:38.795  INFO 18136 --- [       thread-0] com.yq.controller.RedisController        : threadId=38, oldValue=0, againValue=1
 2018-10-12 17:43:38.926  INFO 18136 --- [       thread-1] com.yq.controller.RedisController        : threadId=39, oldValue=1, againValue=2
