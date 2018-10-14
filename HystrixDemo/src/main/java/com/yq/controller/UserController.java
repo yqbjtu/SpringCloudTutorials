@@ -3,6 +3,7 @@
 package com.yq.controller;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.yq.client.UserClient;
 import com.yq.domain.User;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -69,14 +70,18 @@ public class UserController {
     @Autowired
     private RestTemplate restTemplate;
 
-    private static final String serviceName = "user-service";
+    //private static final String serviceName = "user-service";
+    private static final String serviceName = "hystrix-user-service";
+
+    @Autowired
+    UserClient userClient;
 
     @GetMapping(value = "/myusers/{userId}")
     @HystrixCommand(fallbackMethod = "defaultCall")
     //使用断路功能，服务不可用，或者超时会调用defaultCall
     @ApiOperation(value = "按用户id查询", notes="private")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "userId", value = "userID", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "userId", value = "userID", required = true, dataType = "int", paramType = "path"),
     })
     public String callService(@PathVariable String userId) {
         log.info("userId={}", userId);
@@ -96,4 +101,13 @@ public class UserController {
         return "service " + serviceName + " not available when query '" + userId + "'";
     }
 
+    @ApiOperation(value = "按用户id查询 Feign", notes="private")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "int", paramType = "path"),
+    })
+    @GetMapping(value = "/feignusers/{userId}", produces = "application/json;charset=UTF-8")
+    public String getUserByFeign(@PathVariable Integer userId) {
+        String result = userClient.getUserDetail(userId.toString());
+        return result;
+    }
 }
