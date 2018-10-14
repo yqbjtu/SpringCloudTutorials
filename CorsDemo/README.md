@@ -2,7 +2,7 @@
 
 http://127.0.0.1:6606/
 http://localhost:6606/swagger-ui.html#/
-
+http://localhost:6606/
 
 https://spring.io/guides/gs/rest-service-cors/
 
@@ -43,3 +43,7 @@ registry.addResourceHandler("/webjars/**")
                         
                         
      WebMvcConfigure是用来全局定制化Spring Boot的MVC特性。如设置拦截器、跨域访问配置、格式化、URI到视图的映射或者其它全局定制接口。
+
+
+效果截图：
+![cors-setting](img/cors-setting.png)
