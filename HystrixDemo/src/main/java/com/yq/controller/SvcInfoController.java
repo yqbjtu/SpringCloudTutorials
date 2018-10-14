@@ -40,7 +40,7 @@ public class SvcInfoController {
 
     @ApiOperation(value = "按服务name查询")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "name", value = "user-service", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "name", defaultValue = "user-service", value = "user-service", required = true, dataType = "string", paramType = "query"),
     })
     @GetMapping(value = "/info", produces = "application/json;charset=UTF-8")
     public String getInfo(@RequestParam String name) {

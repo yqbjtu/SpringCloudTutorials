@@ -45,3 +45,13 @@ http://projects.spring.io/spring-cloud/spring-cloud.html#_turbine
 
 没有使用默认的fallback返回值
   
+  
+  使用UserServiceClientFallbackFactory之后依然是报
+  {
+    "timestamp": 1539520767328,
+    "status": 500,
+    "error": "Internal Server Error",
+    "exception": "java.lang.RuntimeException",
+    "message": "com.netflix.client.ClientException: Load balancer does not have available server for client: user-service",
+    "path": "/user/feignusers/8"
+  }

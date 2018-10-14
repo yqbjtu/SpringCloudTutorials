@@ -4,6 +4,7 @@ package com.yq.controller;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.yq.client.UserClient;
+import com.yq.client.UserServiceClient;
 import com.yq.domain.User;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -76,6 +77,10 @@ public class UserController {
     @Autowired
     UserClient userClient;
 
+    @Autowired
+    UserServiceClient userServiceClient;
+
+
     @GetMapping(value = "/myusers/{userId}")
     @HystrixCommand(fallbackMethod = "defaultCall")
     //使用断路功能，服务不可用，或者超时会调用defaultCall
@@ -108,6 +113,16 @@ public class UserController {
     @GetMapping(value = "/feignusers/{userId}", produces = "application/json;charset=UTF-8")
     public String getUserByFeign(@PathVariable Integer userId) {
         String result = userClient.getUserDetail(userId.toString());
+        return result;
+    }
+
+    @ApiOperation(value = "按用户id查询 Feign2", notes="private")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "int", paramType = "path"),
+    })
+    @GetMapping(value = "/feig2nusers/{userId}", produces = "application/json;charset=UTF-8")
+    public String getUserByFeign2(@PathVariable Integer userId) {
+        String result = userServiceClient.getUserDetail(userId.toString());
         return result;
     }
 }
