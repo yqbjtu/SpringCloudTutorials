@@ -55,3 +55,13 @@ http://projects.spring.io/spring-cloud/spring-cloud.html#_turbine
     "message": "com.netflix.client.ClientException: Load balancer does not have available server for client: user-service",
     "path": "/user/feignusers/8"
   }
+  
+  
+  Caused by: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'com.yq.client.UserServiceClient': 
+  FactoryBean threw exception on object creation; 
+  nested exception is java.lang.IllegalStateException: Incompatible fallbackFactory instance. Fallback/fallbackFactory of type class com.yq.client.UserServiceClientFallbackFactory is not assignable to interface feign.hystrix.FallbackFactory for feign client user-service
+
+这是因为
+应该使用fallback = FallbackSayService.class， 而我写成 @FeignClient(value = "user-service", fallbackFactory = UserClientFallbackFactory.class)
+
+@FeignClient(value = "user-service", fallback = UserServiceClientFallbackFactory.class)
