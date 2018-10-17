@@ -86,7 +86,7 @@ public class UserController {
     //使用断路功能，服务不可用，或者超时会调用defaultCall
     @ApiOperation(value = "按用户id查询", notes="private")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "userId", value = "userID", required = true, dataType = "int", paramType = "path"),
+            @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "int", paramType = "path"),
     })
     public String callService(@PathVariable String userId) {
         log.info("userId={}", userId);
@@ -120,7 +120,7 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "int", paramType = "path"),
     })
-    @GetMapping(value = "/feig2nusers/{userId}", produces = "application/json;charset=UTF-8")
+    @GetMapping(value = "/feign2users/{userId}", produces = "application/json;charset=UTF-8")
     public String getUserByFeign2(@PathVariable Integer userId) {
         String result = userServiceClient.getUserDetail(userId.toString());
         return result;

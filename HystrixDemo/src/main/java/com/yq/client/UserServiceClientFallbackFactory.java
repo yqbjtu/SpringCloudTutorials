@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class UserServiceClientFallbackFactory implements UserServiceClient{
     @Override
     public String getUserDetail(String userId) {
-        log.error("Fallback2 reason = {}, userId={}");
+        log.error("Fallback2, userId={}", userId);
         return "user-service not available2 when query '" + userId + "'";
     }
 }
