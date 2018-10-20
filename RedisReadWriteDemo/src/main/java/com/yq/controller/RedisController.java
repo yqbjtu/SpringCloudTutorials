@@ -21,6 +21,8 @@ import java.util.Random;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 @RestController
@@ -98,7 +100,7 @@ public class RedisController {
 
     @ApiOperation(value = "多线程读写 by pool", notes="read write")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "num", value = "5", required = true, dataType = "int", paramType = "path"),
+            @ApiImplicitParam(name = "num", defaultValue = "8", value = "5", required = true, dataType = "int", paramType = "path"),
     })
     @PostMapping(value = "/readwritePool/{num}", produces = "application/json;charset=UTF-8")
     public String getMultiPoolReadWrite(@PathVariable Integer num) {
@@ -114,19 +116,21 @@ public class RedisController {
 
     private void testInThreadPool(String key, String hashKey, int num) {
         ThreadPoolExecutor ruleExecutor = new ThreadPoolExecutor(
-                4,             /* minimum (core) thread count */
-                8,        /* maximum thread count */
+                2,             /* minimum (core) thread count */
+                4,        /* maximum thread count */
                 Long.MAX_VALUE, /* timeout */
                 TimeUnit.NANOSECONDS,
                 new LinkedBlockingQueue<Runnable>(),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
 
         Random random = new Random();
+        Lock lock = new ReentrantLock();
         for(int i=0; i< num; i++) {
             Runnable myRunnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        lock.lock();
                         String value = redisService.getHash(key, hashKey);
                         //logger.info("threadId={}, oldValue={}", Thread.currentThread().getId(), value);
                         if (StringUtils.isEmpty(value)) {
@@ -138,8 +142,9 @@ public class RedisController {
                         String againValue = redisService.getHash(key, hashKey);
                         logger.info("threadId={}, oldValue={}, againValue={}", Thread.currentThread().getId(), oldValue, againValue);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("Exception. ", e);
                     } finally {
+                        lock.unlock();
                     }
                 }
             };

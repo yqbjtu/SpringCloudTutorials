@@ -1,6 +1,7 @@
 #redis 多线程读写
 
-http://127.0.0.1:8081/swagger-ui.htmlhttps://docs.spring.io/spring-data/redis/docs/1.8.15.RELEASE/reference/html/  
+http://127.0.0.1:8081/swagger-ui.html  
+https://docs.spring.io/spring-data/redis/docs/1.8.15.RELEASE/reference/html/  
 
 spring boot 1.5.12默认使用的是spring-data-reds 1.8.11  
 
@@ -14,3 +15,18 @@ spring boot 1.5.12默认使用的是spring-data-reds 1.8.11
 2018-10-12 17:43:39.632  INFO 18136 --- [       thread-7] com.yq.controller.RedisController        : threadId=45, oldValue=6, againValue=7
 2018-10-12 17:43:39.641  INFO 18136 --- [       thread-8] com.yq.controller.RedisController        : threadId=46, oldValue=7, againValue=8
 2018-10-12 17:43:39.740  INFO 18136 --- [       thread-9] com.yq.controller.RedisController        : threadId=47, oldValue=8, againValue=9
+
+
+RedisTemplate template = null;
+//这里配置自己的redis 
+   template.watch("key");
+   template.multi();
+   template.opsForValue().set("key","value");
+   List exec = template.exec();
+   if (null==exec){
+       System.out.println("已经有其他线程更改了");
+   }else {
+       System.out.println("更改成功");
+   }
+
+
