@@ -17,22 +17,21 @@ function connect() {
 //http://localhost:8080/appRoot/websocket
     //var socket = new SockJS('/websocket');
 
-    var sockjs_url = 'http://127.0.0.1:6604/bullet';
-    //var sockjs_url = '/websocket';
+    var sockjs_url = 'http://localhost:8086/websocket';
     var socket = new SockJS(sockjs_url);
     stompClient = Stomp.over(socket);
     //var token = localStorage.getItem('Auth-Token') //
     //stompClient.connect({'Auth-Token': token},
     stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
         setConnected(true);
-        console.log('Connected: ' + frame);
-        ///topic/deviceIsLive/
+        console.log('Connected:');
         //stompClient.subscribe('/topic/greetings'+, function (greeting) {
         stompClient.subscribe('/topic/app01', function (greeting) {
-            console.log("subscribe edbb:" + greeting);
-            showGreeting(JSON.parse(greeting.body).content);
+            console.log("subscribe greeting:" + greeting);
+            //去json中name域的值
+            showGreeting(JSON.parse(greeting.body).name);
         });
-
+       console.log('subscribe ok');
     });
 }
 
@@ -45,7 +44,7 @@ function disconnect() {
 }
 
 function sendName() {
-    stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
+    stompClient.send("/topic/app01", {}, JSON.stringify({'name': $("#name").val()}));
 }
 
 function showGreeting(message) {

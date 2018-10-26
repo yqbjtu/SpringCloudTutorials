@@ -61,7 +61,7 @@ public class GreetingController {
     }
 
     @ApiOperation(value = "sendMessage", notes = "")
-    @ApiImplicitParam(name = "message", value = "message, 直接发送到/topic/greetings没有经过inbound的filter", required = true, dataType = "String", paramType = "query")
+    @ApiImplicitParam(name = "message",  value = "message, 直接发送到/topic/greetings没有经过inbound的filter", required = true, dataType = "String", paramType = "query")
     @PostMapping(value = "/message", produces = "application/json;charset=UTF-8")
     public String sendMessage(@RequestParam String message) {
         String getTimestamp = LocalDateTime.now().toString();
@@ -78,8 +78,8 @@ public class GreetingController {
 
     @ApiOperation(value = "messageWithTopic")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "topic", value = "topic", required = true, dataType = "string", paramType = "query"),
-            @ApiImplicitParam(name = "message", value = "message", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "topic", defaultValue = "/topic/app01", value = "topic", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "message", defaultValue = "{\"yqvalue\":\"test1\"}", value = "message", required = true, dataType = "string", paramType = "query"),
     })
     @PostMapping(value = "/messageWithTopic", produces = "application/json;charset=UTF-8")
     public String messageWithTopic(@RequestParam String topic,  @RequestParam String message) {
