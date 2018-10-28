@@ -27,7 +27,7 @@ function connect() {
         console.log('Connected:');
         //stompClient.subscribe('/topic/greetings'+, function (greeting) {
         stompClient.subscribe('/topic/app01', function (greeting) {
-            console.log("subscribe greeting:" + greeting);
+            console.log("subscribe greeting1:" + greeting);
             //去json中name域的值
             showGreeting(JSON.parse(greeting.body).name);
         });

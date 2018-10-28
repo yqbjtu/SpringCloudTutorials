@@ -124,10 +124,23 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, @Nullable Exception ex) {
                 log.info("Inbound afterSendCompletion. message={}", message);
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                MessageHeaders header = message.getHeaders();
+                if (accessor != null && accessor.getCommand() !=null && accessor.getCommand().getMessageType() != null) {
+                    SimpMessageType type = accessor.getCommand().getMessageType();
+                    if (type == SimpMessageType.SUBSCRIBE) {
+                        String topicDest = (String)header.get("simpDestination");
+                        String payload = "{\"name\":\"afterSendCompletion\"}";
+                        MyRunnable myRunnable = new MyRunnable(messagingTemplate, topicDest);
+                        executor.submit(myRunnable);
+                        log.info("subscribe topicDest={}, message={} SUBSCRIBE", topicDest, message);
+                    }
+                }
             }
 
             @Override
             public void afterReceiveCompletion(@Nullable Message<?> message, MessageChannel channel, @Nullable Exception ex) {
+
                 log.info("Inbound afterReceiveCompletion. message={}", message);
             }
         };

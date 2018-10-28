@@ -21,14 +21,14 @@ public class MyRunnable implements Runnable {
     }
     @Override
     public void run() {
-        try {
-            Thread.sleep(9* 1000);
-        }
-        catch (Exception ex) {
-            log.warn("sleep exception", ex);
-        }
-        String payload = "{\"code\":60}";
-        simpMessagingTemplate.convertAndSend("/topic/app01", payload);
+//        try {
+//            Thread.sleep(1* 1000);
+//        }
+//        catch (Exception ex) {
+//            log.warn("sleep exception", ex);
+//        }
+
+        String payload = "{\"name\":\"afterSendCompletion\"}";
         simpMessagingTemplate.convertAndSend(deviceId, payload);
         log.info("send complete. deviceId={}", deviceId);
 
