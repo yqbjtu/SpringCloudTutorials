@@ -1,6 +1,7 @@
 package com.yq.service;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -11,6 +12,7 @@ import org.apache.curator.retry.RetryNTimes;
 /**
  * Curator framework watch test.
  */
+@Slf4j
 public class CuratorWatcherTest {
 
     /** Zookeeper info */
@@ -24,7 +26,7 @@ public class CuratorWatcherTest {
                 new RetryNTimes(10, 5000)
         );
         client.start();
-        System.out.println("zk client start successfully!");
+        log.info("zk client start successfully!");
 
         // 2.Register watcher
         PathChildrenCache watcher = new PathChildrenCache(
@@ -35,18 +37,15 @@ public class CuratorWatcherTest {
         watcher.getListenable().addListener((client1, event) -> {
             ChildData data = event.getData();
             if (data == null) {
-                System.out.println("No data in event[" + event + "]");
+                log.info("No data in event[{}]", event);
             } else {
-                System.out.println("Receive event: "
-                        + "type=[" + event.getType() + "]"
-                        + ", path=[" + data.getPath() + "]"
-                        + ", data=[" + new String(data.getData()) + "]"
-                        + ", stat=[" + data.getStat() + "]");
+                log.info("Receive event: type={}, path={}, data={}, stat={}",
+                        event.getType() ,data.getPath(), new String(data.getData()), data.getStat());
 
             }
         });
         watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-        System.out.println("Register zk watcher successfully!");
+        log.info("Register zk watcher successfully!");
 
         Thread.sleep(Integer.MAX_VALUE);
     }

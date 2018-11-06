@@ -23,10 +23,8 @@ public class MyCommandLineRunner implements CommandLineRunner {
     @Autowired
     private CuratorService zkClient;
 
-
     @Autowired
     private ConsulRegistration registration;
-
 
     @Autowired
     LeaderSelectorService  svc;
@@ -40,6 +38,5 @@ public class MyCommandLineRunner implements CommandLineRunner {
         //需要检查一下是否是刚刚启动，判断刚刚启动的标准，第一/myWorkerList不存在或者为空，
         //第二， /mySubList下面的childrenNode有，但是/myWorkerList中没有改节点， 如果childrenNode不存在于/myWorkerList
         //立刻清理改children
-
     }
 }

@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,13 +47,15 @@ public class LeaderSelectorService {
 
     //存放自己的任务列表，Map<String, String>  <uuid, content>
     private List<Map<String, String>> mySubList = new ArrayList<>();
+    private CountDownLatch  countDownLatch = new CountDownLatch(1);
 
     public void init() throws Exception
     {
         instanceId = registration.getInstanceId();
         try {
             client =
-                    CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(1000, 3));
+                //CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(1000, 3));
+                CuratorFrameworkFactory.newClient("127.0.0.1:2181", 30*1000, 15*1000, new ExponentialBackoffRetry(1000, 3));
             client.start();
             //先注册自己 人，然后才watch其他人
             registerMySelf();
@@ -65,10 +68,10 @@ public class LeaderSelectorService {
             watchAllSubList();
             watchWorkerList();
 
-            System.out.println("Press enter/return to quit\n");
-            new BufferedReader(new InputStreamReader(System.in)).readLine();
+            countDownLatch.await();
+
         } finally {
-            System.out.println("Shutting down...");
+            log.info("Shutting down...");
             CloseableUtils.closeQuietly(selector);
             CloseableUtils.closeQuietly(client);
         }
@@ -105,13 +108,8 @@ public class LeaderSelectorService {
                 Long threadId = Thread.currentThread().getId();
                 ChildData data = event.getData();
                 if (data == null) {
-                    System.out.println("No data in event[" + event + "]");
+                    log.info("No data in event[{}]", event);
                 } else {
-                    log.info("Receive event: "
-                            + "type=[" + event.getType() + "]"
-                            + ", path=[" + data.getPath() + "]"
-                            + ", data=[" + new String(data.getData()) + "]"
-                            + ", stat=[" + data.getStat() + "]");
                     if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
                         /* 新增加了哪个任务，很多就知道了
                         type=[CHILD_ADDED], path=[/allSubList/A001], data=[ca001], stat=[1534,1534,1535953560268,1535953560268,0,0,0,0,5,0,1534
@@ -140,11 +138,8 @@ public class LeaderSelectorService {
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
                         log.info("ALL_SUB_PATH task更新，不用管. threadId={}", threadId);
                     } else {
-                        log.info("Receive event: "
-                                + "type=[" + event.getType() + "]"
-                                + ", path=[" + data.getPath() + "]"
-                                + ", data=[" + new String(data.getData()) + "]"
-                                + ", stat=[" + data.getStat() + "]");
+                        log.info("Receive event: type={}, path={}, data={}, stat={}",
+                                event.getType() ,data.getPath(), new String(data.getData()), data.getStat());
                     }
                 }
             });
@@ -189,7 +184,7 @@ public class LeaderSelectorService {
             watcher.getListenable().addListener((client1, event) -> {
                 ChildData data = event.getData();
                 if (data == null) {
-                    System.out.println("No data in event[" + event + "]");
+                    log.info("No data in event[{}]", event);
                 } else {
                     if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
                         /* 新增加了哪个任务，很多就知道了
@@ -211,11 +206,8 @@ public class LeaderSelectorService {
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
                         log.info("MY_SUBLIST_PATH task更新，不用管");
                     } else {
-                        log.info("Receive event: "
-                                + "type=[" + event.getType() + "]"
-                                + ", path=[" + data.getPath() + "]"
-                                + ", data=[" + new String(data.getData()) + "]"
-                                + ", stat=[" + data.getStat() + "]");
+                        log.info("Receive event: type={}, path={}, data={}, stat={}",
+                                event.getType() ,data.getPath(), new String(data.getData()), data.getStat());
                     }
                 }
             });
@@ -241,7 +233,7 @@ public class LeaderSelectorService {
                 Long threadId = Thread.currentThread().getId();
                 ChildData data = event.getData();
                 if (data == null) {
-                    System.out.println("No data in event[" + event + "]");
+                    log.info("No data in event[{}]", event);
                 } else {
                     if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
                     /*
@@ -279,11 +271,8 @@ public class LeaderSelectorService {
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
                         log.info("workerList child更新，不用管. threadId={}", threadId);
                     } else {
-                        log.info("Receive event: "
-                                + "type=[" + event.getType() + "]"
-                                + ", path=[" + data.getPath() + "]"
-                                + ", data=[" + new String(data.getData()) + "]"
-                                + ", stat=[" + data.getStat() + "]");
+                        log.info("Receive event: type={}, path={}, data={}, stat={}",
+                                event.getType() ,data.getPath(), new String(data.getData()), data.getStat());
                     }
                 }
             });

@@ -59,10 +59,10 @@ public class ZKController {
         return jsonObj.toJSONString();
     }
 
-    @ApiOperation(value = "getMyList current uuid", notes="get")
+    @ApiOperation(value = "getAllParticipants current uuid", notes="get")
     @ApiImplicitParams({
     })
-    @GetMapping(value = "/getAll", produces = "application/json;charset=UTF-8")
+    @GetMapping(value = "/getAllParticipants", produces = "application/json;charset=UTF-8")
     public String getAllParticipants() {
         Collection<Participant>  allParticipants = leaderSvc.getAllParticipants();
         JSONObject jsonObj = new JSONObject();
