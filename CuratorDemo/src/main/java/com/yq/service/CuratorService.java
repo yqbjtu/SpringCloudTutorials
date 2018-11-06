@@ -1,12 +1,15 @@
 package com.yq.service;
 
 import com.yq.Constant.PathConstants;
+import com.yq.config.ZkConfig;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,18 +24,17 @@ import java.util.List;
  * @version 2018/8/24 23:51
  */
 @Service
+@Slf4j
 public class CuratorService {
-    private static final Logger log = LoggerFactory.getLogger(CuratorService.class);
+    @Autowired
+    ZkConfig zKConfig;
 
-    private String ZKServers = "127.0.0.1:2181";
     private CuratorFramework client  = null;
-    private static final String PARENT_NODE = "/parentNode";
-    private static final String PARENT_NODE_TEMP = "/parentNodeTemp";
     private List<String> myTopicsList = new ArrayList<>();
 
-    public CuratorService() throws Exception {
+    public void init() throws Exception {
         client = CuratorFrameworkFactory.newClient(
-                ZKServers,
+                zKConfig.getZkServers(),
                 new RetryNTimes(10, 5000)
         );
         client.start();
@@ -87,35 +89,45 @@ public class CuratorService {
         return diff;
     }
 
-    public String createNode(String uuid, String content)   {
+    public boolean createNode(String uuid, String content)   {
         String topicPath = PathConstants.ALL_SUB_PATH + "/" + uuid;
         String result = null;
+        boolean isOK = true;
         try {
             Stat stat = client.checkExists().forPath(PathConstants.ALL_SUB_PATH);
             if(stat != null){
-
                 stat = client.checkExists().forPath(topicPath);
 
                 if(stat != null){
-                    byte[] existingValue = client.getData().forPath(topicPath);
-                    log.info("topicPath={}, existingValue is '{}'.", topicPath,  new String(existingValue,"UTF-8"));
+                    byte[] existingValueByte = client.getData().forPath(topicPath);
+                    String existingValueStr = new String(existingValueByte,"UTF-8");
+                    if (existingValueStr != null && !existingValueStr.equals(content)) {
+                        log.warn("topicPath={}, existingValue is '{}', but it should be '{}'",
+                                topicPath, existingValueStr, content);
+                        isOK = false;
+                    }
+                    else {
+                        log.warn("topicPath={}, content is '{}',it is already bean subscribing.", topicPath, content);
+                    }
                 }
                 else {
                     result = client.create().forPath(topicPath, content.getBytes("utf-8"));
                 }
             }
             else {
-                log.info("parent node does not exist, create it");
+                log.warn("parent node does not exist, create it");
                 client.create().forPath(PathConstants.ALL_SUB_PATH);
+                isOK = false;
 
             }
         }
         catch (Exception ex ) {
             log.info("create node exception", ex);
+            isOK = false;
         }
 
-        log.info("created topicPath {}", topicPath);
-        return result;
+        log.info("created topicPath {}, content=", topicPath, result);
+        return isOK;
     }
 
 
@@ -127,9 +139,12 @@ public class CuratorService {
             if(stat != null){
                 client.delete().forPath(topicPath);
             }
+            else {
+                log.warn("topicPath={}, it is already bean unsubscribing.", topicPath);
+            }
         }
         catch (Exception ex ) {
-            log.info("create node exception", ex);
+            log.warn("delete node exception", ex);
         }
 
         return isDelOK;

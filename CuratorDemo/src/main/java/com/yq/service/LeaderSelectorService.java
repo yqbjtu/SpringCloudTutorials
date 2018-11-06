@@ -1,6 +1,7 @@
 package com.yq.service;
 
 import com.yq.Constant.PathConstants;
+import com.yq.config.ZkConfig;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
@@ -40,6 +41,9 @@ public class LeaderSelectorService {
     @Autowired
     private ConsulRegistration registration;
 
+    @Autowired
+    ZkConfig zKConfig;
+
     private static final int CLIENT_QTY = 10;
     private CuratorFramework client = null;
     private MyLeaderSelectorListener selector = null;
@@ -55,7 +59,7 @@ public class LeaderSelectorService {
         try {
             client =
                 //CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(1000, 3));
-                CuratorFrameworkFactory.newClient("127.0.0.1:2181", 30*1000, 15*1000, new ExponentialBackoffRetry(1000, 3));
+                CuratorFrameworkFactory.newClient(zKConfig.getZkServers(), 30*1000, 15*1000, new ExponentialBackoffRetry(1000, 3));
             client.start();
             //先注册自己 人，然后才watch其他人
             registerMySelf();

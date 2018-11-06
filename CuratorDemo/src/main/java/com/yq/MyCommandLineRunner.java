@@ -32,6 +32,7 @@ public class MyCommandLineRunner implements CommandLineRunner {
     @Override
     public void run(String... strings) throws Exception {
         log.info("MyCommandLineRunner初始化 zkClient={}, registration={}, svc={}", zkClient, registration, svc);
+        zkClient.init();
         zkClient.getData(PathConstants.ALL_SUB_PATH);
         svc.init();
 
