@@ -446,6 +446,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     distributeNewTaskList2Worker(workerId, tmpTaskList);
                 }
                 else {
+                    log.info("workerId={}任务没有到达平均值。 将任务list={}添加到notReachedAvgWorkerList", workerId, workerPath);
                     notReachedAvgWorkerList.add(workerPath);
                 }
             }

@@ -250,7 +250,7 @@ public class LeaderSelectorService {
                         String path = data.getPath();
                         if (selector.getLeaderSelector().hasLeadership()) {
                             selector.processNewWorker(data.getPath());
-                            log.info("新增workerId={}，workerId={}是leader,需要让其他活着的worker接管该worker上的任务. threadId={}",
+                            log.info("新增workerId={}，workerId={}是leader,需要从其他活着的worker转移一些任务到新的worker上. threadId={}",
                                     path, instanceId, Thread.currentThread().getId());
                         }
                         else {
