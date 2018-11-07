@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -42,6 +43,19 @@ public class ZKController {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
         jsonObj.put("list", list);
+        jsonObj.put("instanceId", leaderSvc.getInstanceId());
+        return jsonObj.toJSONString();
+    }
+
+    @ApiOperation(value = "getAllWorkerList uuid", notes="get")
+    @ApiImplicitParams({
+    })
+    @GetMapping(value = "/getAllWorkerList", produces = "application/json;charset=UTF-8")
+    public String getAllWorkerList() {
+        Map<String, List<String>> map = leaderSvc.getAllWorkerSubList();
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        jsonObj.put("list", map);
         jsonObj.put("instanceId", leaderSvc.getInstanceId());
         return jsonObj.toJSONString();
     }
@@ -79,10 +93,10 @@ public class ZKController {
     })
     @GetMapping(value = "/createNode", produces = "application/json;charset=UTF-8")
     public String createChildNode(@RequestParam String uuid, @RequestParam String content) {
-        String value = zkClient.createNode(uuid, content);
+        boolean isOK = zkClient.createNode(uuid, content);
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
-        jsonObj.put("value", value);
+        jsonObj.put("isOK", isOK);
         return jsonObj.toJSONString();
     }
 

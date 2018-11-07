@@ -22,6 +22,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -306,6 +308,56 @@ public class LeaderSelectorService {
         return subList;
     }
 
+    /*
+ * 获取所有instance的订阅情况
+ */
+    public Map<String ,List<String>> getAllWorkerSubList() {
+        String allWorkerListPath = PathConstants.WORKER_PATH;
+        Map<String ,List<String>> workerSubListMap = null;
+        try
+        {
+            List<String> workerList = client.getChildren().forPath(allWorkerListPath);
+
+            if (workerList != null && !workerList.isEmpty()) {
+                workerSubListMap = new HashMap<>();
+                for(String workerId : workerList) {
+                    String workerSubListPath = PathConstants.MY_SUB_PATH + "/" + workerId;
+                    List<String> subList = client.getChildren().forPath(workerSubListPath);
+
+                    if (subList != null && !subList.isEmpty()) {
+                        List<String> detailedList = new ArrayList<>();
+                        for (String connectorId : subList) {
+                            String fullPath = workerSubListPath +  "/" + connectorId;
+                            String topicName = getData(fullPath);
+                            detailedList.add(connectorId +"---"+ topicName);
+                        }
+                        workerSubListMap.put(workerId, detailedList);
+                    }
+                    else {
+                        workerSubListMap.put(workerId, subList);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            log.info("Get All instance sub list. exception", ex);
+        }
+
+        return Collections.unmodifiableMap(workerSubListMap);
+    }
+
+    private String getData(String fullPath) {
+        String topicStr = null;
+        try {
+            byte[] topicByte = client.getData().forPath(fullPath);
+            topicStr = new String(topicByte, "UTF-8");
+        }
+        catch (Exception ex) {
+            log.warn("Can't read data from fullPath={}, exception.", fullPath, ex);
+        }
+        return topicStr;
+    }
+
     public Participant getCurrentLeader() {
         Participant leader = null;
         try {
@@ -327,4 +379,6 @@ public class LeaderSelectorService {
         }
         return  allParticipants;
     }
+
+
 }
