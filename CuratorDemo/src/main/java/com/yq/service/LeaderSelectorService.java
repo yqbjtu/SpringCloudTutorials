@@ -75,7 +75,6 @@ public class LeaderSelectorService {
             watchWorkerList();
 
             countDownLatch.await();
-
         } finally {
             log.info("Shutting down...");
             CloseableUtils.closeQuietly(selector);
@@ -199,7 +198,7 @@ public class LeaderSelectorService {
                         */
                         String uuid = data.getPath().substring(PathConstants.MY_SUB_PATH.length() + 1 + instanceId.length() + 1);
                         String content = new String(data.getData());
-                        log.info("我的任务新增一个task，需要执行该task 执行更新, uuid={}, content={}", uuid, content);
+                        log.info("我的任务新增一个task，需要执行该task并更新该task的状态, uuid={}, content={}", uuid, content);
                     }
                     else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
                         /* 哪个task 取消了，非常清楚就知道了
@@ -208,7 +207,7 @@ public class LeaderSelectorService {
                         */
                         String uuid = data.getPath().substring(PathConstants.MY_SUB_PATH.length() +1);
                         String content = new String(data.getData());
-                        log.info("我的任务取消一个task，需要执行该task 取消更新uuid={}, content={}", uuid, content);
+                        log.info("我的任务取消一个task，需要取消该task 并更新该task的状态. uuid={}, content={}", uuid, content);
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
                         log.info("MY_SUBLIST_PATH task更新，不用管");
                     } else {
@@ -246,7 +245,6 @@ public class LeaderSelectorService {
                         type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695],
                         data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
                     */
-
                         String path = data.getPath();
                         if (selector.getLeaderSelector().hasLeadership()) {
                             selector.processNewWorker(data.getPath());
@@ -266,7 +264,7 @@ public class LeaderSelectorService {
                         String path = data.getPath();
                         if (selector.getLeaderSelector().hasLeadership()) {
                             selector.processDownWorker(data.getPath());
-                            log.info("workerId={} down了，workerId={}是leader,需要让其他活着的worker接管该worker上的任务. threadId={}",
+                            log.info("workerId={} down了, workerId={}是leader,需要让其他活着的worker接管该worker上的任务. threadId={}",
                                     path, instanceId,Thread.currentThread().getId());
                         }
                         else {

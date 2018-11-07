@@ -604,13 +604,15 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     int avgTaskCount = (int)Math.ceil(tmpAvgCount);
                     log.info("DownInstance taskCount={}, workerCount={}, tmpAvgCount={}, avgCount={}", taskCount, workerCount, tmpAvgCount, avgTaskCount);
 
-                    //先实现最简单的当前这些任务直接分配给所有活着的list
+                    //先实现最简单的, 将这些任务直接分配给所有活着的list
                     distributeDownSubList2AllListWorker(workerSubListPath, avgTaskCount);
+                    //清理旧的workerSubListPath 路径
+                    client.delete().forPath(workerSubListPath);
+                    log.info("delete workerSubListPath={}", workerSubListPath);
                 }
                 else {
                     log.info("DownInstance={} has no tasks or 0 task.", instanceId);
                 }
-
             }
         }
         catch (Exception ex) {
@@ -625,7 +627,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         List<String> liveWorkerList = getAllLiveWorkerList();
 
         //是否所有活着的worker都到达或者接近平衡了
-        boolean isAllWorkerReachedAvg =true;
+        boolean isAllWorkerReachedAvg = true;
         List<String> notReachedAvgWorkerList = new ArrayList<>();
 
         for (String workerPath : liveWorkerList) {
@@ -681,7 +683,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
             }
         }
 
-        if(notReachedAvgWorkerList.size() != 0 ) {
+        if(!notReachedAvgWorkerList.isEmpty()) {
             for (String workerPath : notReachedAvgWorkerList) {
                 if (taskList.size() == 0) {
                     //任务分配完毕，跳出循环

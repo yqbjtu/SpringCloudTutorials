@@ -120,8 +120,7 @@ public class CuratorService {
                 isOK = false;
 
             }
-        }
-        catch (Exception ex ) {
+        } catch (Exception ex ) {
             log.info("create node exception", ex);
             isOK = false;
         }
