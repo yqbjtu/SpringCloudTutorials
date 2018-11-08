@@ -163,7 +163,7 @@ public class LeaderSelectorService {
             //检查该worker是否有任务uuid
             Stat stat = client.checkExists().forPath(workerTaskPath);
             if(stat == null) {
-                log.info("InstanceId={} has no task={}", instanceId, uuid);
+                log.info("task={} is not on InstanceId={}",uuid, instanceId);
             }
             else {
                 client.delete().forPath(workerTaskPath);
