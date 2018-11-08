@@ -473,7 +473,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     distributeNewTaskList2Worker(workerId, tmpTaskMap);
                 }
                 else {
-                    log.info("workerId={}任务没有到达平均值。 将任务workerId={}添加到notReachedAvgWorkerList", workerId, workerPath);
+                    log.info("workerId={}任务没有到达平均值。 将workerId={}添加到notReachedAvgWorkerList", workerId, workerPath);
                     notReachedAvgWorkerList.add(workerPath);
                 }
             }
@@ -506,7 +506,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
                     iterator.remove();
                 }
                 //将tmpTaskMap中的任务分配给workerId
-                log.info("workerId={}没到达平均任务。 将任务tmpTasklist={}分配给它", tmpTaskMap, workerId);
+                log.info("workerId={}没到达平均任务。 将任务tmpTasklist={}分配给它", workerId, tmpTaskMap);
                 distributeNewTaskList2Worker(workerId, tmpTaskMap);
             }
         }

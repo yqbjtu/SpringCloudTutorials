@@ -49,11 +49,11 @@
 
 
 
-    <!-- 基础日志输出级别 -->
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
     </root>
+
 
 </configuration>
