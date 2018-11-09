@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -88,8 +89,8 @@ public class LeaderSelectorService {
         try {
             Stat stat = client.checkExists().forPath(workerPath);
             if(stat == null) {
-                long currentTime = System.currentTimeMillis();
-                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(workerPath,String.valueOf(currentTime).getBytes("UTF-8"));
+                String currentTimeStr = LocalDateTime.now().toString();
+                client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(workerPath, currentTimeStr.getBytes("UTF-8"));
                 log.warn("create workerPath={} in registerMySelf. threadId={}", workerPath, threadId);
             }
             else {
@@ -116,13 +117,13 @@ public class LeaderSelectorService {
                     log.info("No data in event[{}]", event);
                 } else {
                     if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
-                        /* 新增加了哪个任务，很多就知道了
+                        /* 新增加了哪个任务，通过data的getPath和getData就知道了
                         type=[CHILD_ADDED], path=[/allSubList/A001], data=[ca001], stat=[1534,1534,1535953560268,1535953560268,0,0,0,0,5,0,1534
                         */
-                        log.info("ALL_SUB_PATH 新增task，需要当前leader分配task给worker. threadId={}", threadId);
-                        if(selector.isLeader()) {
-                            String uuid = data.getPath().substring(PathConstants.ALL_SUB_PATH.length() +1);
-                            String content = new String(data.getData());
+                        String uuid = data.getPath().substring(PathConstants.ALL_SUB_PATH.length() +1);
+                        String content = new String(data.getData());
+                        log.info("ALL_SUB_PATH新增task(uuid={}, content={})，需要当前leader分配task给worker. threadId={}", uuid, content, threadId);
+                        if(selector.getLeaderSelector().hasLeadership()) {
                             log.info("InstanceId={} is leader now,开始处理新task, uuid={}, content={}, threadId={}",
                                     instanceId, uuid, content, threadId);
                             selector.distributeNewTask2Worker(uuid, content);
@@ -151,8 +152,7 @@ public class LeaderSelectorService {
             watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
             log.info("Register zk watcher 观察总的任务列表successfully!");
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             log.info("观察总的任务列表 was interrupted.", ex);
         }
     }
@@ -205,7 +205,7 @@ public class LeaderSelectorService {
                         type=[CHILD_REMOVED], path=[/myWorkerList/sub-service-8082-1774221102],
                         data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
                         */
-                        String uuid = data.getPath().substring(PathConstants.MY_SUB_PATH.length() +1);
+                        String uuid = data.getPath().substring(PathConstants.MY_SUB_PATH.length() + 1 + instanceId.length() + 1);
                         String content = new String(data.getData());
                         log.info("我的任务取消一个task，需要取消该task 并更新该task的状态. uuid={}, content={}", uuid, content);
                     }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {

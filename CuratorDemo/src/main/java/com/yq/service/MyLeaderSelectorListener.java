@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,8 +33,7 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
     private final LeaderSelector leaderSelector;
     private final AtomicInteger leaderCount = new AtomicInteger();
     private CuratorFramework client = null;
-    private volatile boolean isLeader = false;
-
+    private CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public MyLeaderSelectorListener(CuratorFramework client, String path, String instanceId) {
         this.instanceId = instanceId;
@@ -47,7 +47,6 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
 
         // for most cases you will want your instance to requeue when it relinquishes leadership
         leaderSelector.autoRequeue();
-
     }
 
     public void start() throws IOException
@@ -112,12 +111,9 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
     @Override
     public void takeLeadership(CuratorFramework client) throws Exception {
         // we are now the leader. This method should not return until we want to relinquish leadership
-        final int waitSeconds = (int)(1000 * 30 * Math.random()) + 1;
 
         Long threadId = Thread.currentThread().getId();
-        log.info("{} is now the leader. Waiting {} seconds..., threadId={}", instanceId, waitSeconds, threadId);
-        log.info("当前leader是{}. {} time(s) before. threadId={}", instanceId, leaderCount.getAndIncrement(), threadId);
-        isLeader = true;
+        log.info("{} is now the leader. threadId={}", instanceId, threadId);
 
         /*
         刚接管了leader后，需要检查一下当前/allSubList和所有有效live worker下面的subList之和是否相等，这是所有leader需要完成的任务
@@ -127,61 +123,15 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
 
         leaderCheckIntegrity();
 
-        try
-        {
-//            //观察当前的worker， 有几个实例在工作
-//            PathChildrenCache watcher = new PathChildrenCache(
-//                    client,
-//                    PathConstants.WORKER_PATH,
-//                    true    // if cache data
-//            );
-//            watcher.getListenable().addListener((client1, event) -> {
-//
-//                ChildData data = event.getData();
-//                if (data == null) {
-//                    System.out.println("No data in event[" + event + "]");
-//                } else {
-//                if (event.getType() == PathChildrenCacheEvent.Type.CHILD_ADDED) {
-//                    /*
-//                        type=[CHILD_ADDED], path=[/myWorkerList/sub-service-8082-2103334695],
-//                        data=[1535881598520], stat=[1463,1463,1535881598527,1535881598527,0,0,0,100654189908262946,13,0,1463
-//                    */
-//                    log.info("workerList 新增child，需要把现有的任务分配给新child. threadId={}", Thread.currentThread().getId());
-//                    processNewWorker(data.getPath());
-//
-//                }
-//                else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_REMOVED) {
-//                    /* 哪个worker down了，非常清楚就知道了
-//                        type=[CHILD_REMOVED], path=[/myWorkerList/sub-service-8082-1774221102],
-//                        data=[1535881276839], stat=[1449,1449,1535881276849,1535881276849,0,0,0,100654189908262942,13,0,1449
-//                    */
-//                    log.info("workerList 有child down了，需要接管该child上的任务. threadId={}", Thread.currentThread().getId());
-//                    processDownWorker(data.getPath());
-//
-//                }else if (event.getType() == PathChildrenCacheEvent.Type.CHILD_UPDATED) {
-//                    log.info("workerList child更新，不用管. threadId={}", threadId);
-//                } else {
-//                    log.info("Receive event: "
-//                            + "type=[" + event.getType() + "]"
-//                            + ", path=[" + data.getPath() + "]"
-//                            + ", data=[" + new String(data.getData()) + "]"
-//                            + ", stat=[" + data.getStat() + "]");
-//                }
-//                }
-//            });
-//            watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
-//            log.info("Register zk watcher 工作实例 successfully!");
-            Thread.sleep(TimeUnit.SECONDS.toMillis(waitSeconds));
+        try {
+            countDownLatch.await();
         }
-        catch ( InterruptedException e )
-        {
+        catch ( InterruptedException e ) {
             log.info(instanceId + " was interrupted.");
             Thread.currentThread().interrupt();
         }
-        finally
-        {
-            log.info(instanceId + " relinquishing leadership.");
-            isLeader = false;
+        finally {
+            log.info("{}释放leadership.",instanceId);
         }
     }
     /*
@@ -910,9 +860,5 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         }
 
         return count;
-    }
-
-    public boolean isLeader() {
-        return this.isLeader;
     }
 }
