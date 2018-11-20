@@ -25,6 +25,13 @@ public class RedisController {
    @Autowired
    RedisService redisService;
 
+    @ApiOperation(value = "获取sequence")
+    @GetMapping(value = "/sequence", produces = "application/json;charset=UTF-8")
+    public long getSequence() {
+        long value = redisService.getRedisSequence();
+        return value;
+    }
+
     @ApiOperation(value = "设置key", notes="set")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "key", value = "name1", required = true, dataType = "string", paramType = "path")

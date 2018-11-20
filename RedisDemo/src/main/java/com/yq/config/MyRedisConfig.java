@@ -1,6 +1,7 @@
 package com.yq.config;
 
 import com.yq.controller.RedisController;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -16,12 +17,14 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
  * @version 2018/8/5 23:05
  */
 
+
+@Slf4j
 public class MyRedisConfig {
-    private Logger logger = LoggerFactory.getLogger(MyRedisConfig.class);
+
     @Bean
     public LettuceConnectionFactory connectionFactory() {
         LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory();
-        logger.info("myConfig LettuceConnectionFactory");
+        log.info("myConfig LettuceConnectionFactory");
         return connectionFactory; // <2>
     }
 

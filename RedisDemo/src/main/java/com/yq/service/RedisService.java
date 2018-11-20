@@ -12,5 +12,6 @@ public interface RedisService {
     void set(String key, String value);
     String getHash(String key, String hashKey);
     void setHash(String key, String hashKey, String value);
+    long getRedisSequence();
 }
 
