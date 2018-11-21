@@ -1,6 +1,7 @@
 package com.yq;
 
 import com.yq.service.MyZooKeeper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -10,8 +11,7 @@ import org.apache.curator.framework.recipes.locks.InterProcessReadWriteLock;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.utils.CloseableUtils;
 import org.apache.zookeeper.data.Stat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,11 +35,10 @@ import java.util.concurrent.TimeUnit;
  * @version 2018/8/24 23:43
  */
 
+@Slf4j
 public class ZKClientApp {
-    private static final Logger log = LoggerFactory.getLogger(ZKClientApp.class);
     private static final String LOCK_ZNODE = "/MsgId_OtherId";
     private static final String ZK_SERVERS = "127.0.0.1:2181";
-
 
     static final int SESSION_OUTTIME = 5000;
 
@@ -96,8 +95,8 @@ public class ZKClientApp {
                 .build();
         cf.start();
 
-        final InterProcessMutex lock = new InterProcessMutex(cf, "/LOCK_ZNODE");
-        //final InterProcessReadWriteLock rwlock = new InterProcessReadWriteLock(cf, "/LOCK_ZNODE");
+        final InterProcessMutex lock = new InterProcessMutex(cf, LOCK_ZNODE);
+        //final InterProcessReadWriteLock rwlock = new InterProcessReadWriteLock(cf, LOCK_ZNODE);
         final CountDownLatch countdown = new CountDownLatch(1);
         final CyclicBarrier cyclicBarrier = new CyclicBarrier(10);
 

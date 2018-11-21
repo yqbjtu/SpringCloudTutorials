@@ -84,7 +84,12 @@
             <!--<artifactId>slf4j-simple</artifactId>-->
             <!--<version>1.7.25</version>-->
         <!--</dependency>-->
-
+        <!--解决Error:(16, 1) java: package org.slf4j does not exist问题-->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
 
         <dependency>
             <groupId>com.alibaba</groupId>
