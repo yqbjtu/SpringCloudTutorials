@@ -47,3 +47,7 @@ registry.addResourceHandler("/webjars/**")
 
 效果截图：
 ![cors-setting](img/cors-setting.png)
+
+
+https://howtodoinjava.com/spring5/webmvc/spring-mvc-cors-configuration/  
+@CrossOrigin既可以用户在类，也可以用在方法级别。 如果类和方法同时都用了，方法上的优先

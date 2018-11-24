@@ -46,7 +46,8 @@ https://docs.spring.io/spring-data/data-redis/docs/current/reference/html/#redis
 
 现在的controller提供了2个rest api，一个设置key value一个根据key获取
 http://127.0.0.1:8080/cache/keys/aaa?value=bbbb1  post
-http://127.0.0.1:8080/cache/keys/aaa  get  
+http://127.0.0.1:8181/cache/keys/aaa  get  
+http://127.0.0.1:8181/swagger-ui.html
 
 
 required a bean of type 'org.springframework.data.redis.support.atomic.RedisAtomicLong'  

@@ -47,12 +47,12 @@ public class DistSequenceGenerator {
                 seq++;
             }
             else {
-                log.warn( "seq=0 for seqInByte={}", seqInByte);
+                log.warn("seq=0 for seqInByte={}", seqInByte);
             }
 
             curator.setData().forPath(lockPath,new Integer(seq).toString().getBytes());
         }catch(Exception ex) {
-            log.error( "Exception", ex );
+            log.error("Exception", ex );
         }finally {
             mutex.release();
         }

@@ -3,6 +3,7 @@ package com.yq.service.impl;
 import com.yq.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -30,6 +31,14 @@ public class RedisServiceImpl implements RedisService {
 
     @Autowired
     RedisAtomicLong redisAtomicLong;
+
+    private static final String LONG_KEY = "yqLong";
+
+    @Bean
+    public RedisAtomicLong getRedisAtomicLong() {
+        RedisAtomicLong counter = new RedisAtomicLong(LONG_KEY, template.getConnectionFactory());
+        return counter;
+    }
 
     @Override
     public String get(String key) {

@@ -18,7 +18,7 @@ public class MyZooKeeper implements Watcher {
     protected CountDownLatch countDownLatch = new CountDownLatch(1);
 
     private static final int SESSION_TIME = 2000;
-    public static ZooKeeper zooKeeper = null;
+    private static ZooKeeper zooKeeper = null;
 
     private static final String PATH_NAME = "/yqPath";
 
@@ -80,7 +80,7 @@ public class MyZooKeeper implements Watcher {
 
     public boolean createPath(String path, String data){
         try {
-            String zkPath = MyZooKeeper.zooKeeper.create(path, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            String zkPath = zooKeeper.create(path, data.getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             log.info("ZooKeeper. create path={}", zkPath);
             return true;
         } catch (KeeperException e) {
@@ -90,6 +90,7 @@ public class MyZooKeeper implements Watcher {
         }
         return false;
     }
+
     public boolean detelePath(String path){
         try {
             MyZooKeeper.zooKeeper.delete(path, -1);

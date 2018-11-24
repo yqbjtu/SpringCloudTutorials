@@ -5,6 +5,7 @@ import com.yq.service.LogService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +33,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 
 @RestController
+@Slf4j
 public class LogController {
     @Autowired
     private LogService logService;
@@ -60,9 +63,7 @@ public class LogController {
 //                .withTypes("logs")
 //                .withPageable(new PageRequest(0,10))
 //                .build();
-        long nowLong = System.currentTimeMillis();
-        long fiveMinsBeforeLong = nowLong - 1000 * 60 * 60 * 2;
-        Date fiveMinsBefore = new Date(fiveMinsBeforeLong);
+
 
 //        SearchQuery searchQuery = new NativeSearchQueryBuilder()
 //                .withQuery(matchQuery("title","Search engines").operator(AND))
@@ -102,13 +103,24 @@ public class LogController {
 //                //.withQuery(QueryBuilders.rangeQuery("@timestamp").lte("2018-09-10T04:44:31.364Z").gte("2018-09-10T04:39:31.364Z"))
 //                .build();
 
-        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("aaa-2018.09.10")
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        Date now = new Date();
+
+        long nowLong = System.currentTimeMillis();
+        long fiveMinsBeforeLongWithGMT8 = nowLong - 1000 * 60 * 2 - 1000 * 60*60 *8;
+        long nowLongWithGMT8 = nowLong  - 1000 * 60*60 *8;;
+        Date fiveMinsBeforeWithGMT8 = new Date(fiveMinsBeforeLongWithGMT8);
+        Date nowWithGMT8 = new Date(nowLongWithGMT8);
+        String strfiveMinsBefore = format.format(fiveMinsBeforeWithGMT8);
+        String strNow = format.format(nowWithGMT8);
+        log.info("strfiveMinsBefore={}, strNow={}", strfiveMinsBefore, strNow);
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("iot-test-2018.09.10")
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").gte(fiveMinsBefore))
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").lte(new Date()))
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").gte("2018-09-10T04:39:31.364Z")) ---如果大约和小于是and关系必须在一起
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").lte("2018-09-10T04:44:31.364Z"))
                 .withFilter(QueryBuilders.matchPhraseQuery("level", level))
-                .withQuery(QueryBuilders.rangeQuery("@timestamp").lte("2018-09-10T04:44:31.364Z").gte("2018-09-10T04:39:31.364Z"))
+                .withQuery(QueryBuilders.rangeQuery("@timestamp").lte(strNow).gte(strfiveMinsBefore))
                 .withPageable(new PageRequest(0, 10))
                 .build();
 
@@ -124,7 +136,7 @@ public class LogController {
     })
     @GetMapping("/logByAllNative/{all}")
     public Page<Log> findLogByAllNative(@PathVariable("all") String all) {
-        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("aaa-2018.09.10")
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("iot-test-2018.09.10")
                 .withQuery(QueryBuilders.matchPhraseQuery("_all", all))
                 .withPageable(new PageRequest(0, 10))
                 .build();

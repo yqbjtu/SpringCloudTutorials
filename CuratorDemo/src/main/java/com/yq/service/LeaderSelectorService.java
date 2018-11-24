@@ -91,7 +91,7 @@ public class LeaderSelectorService {
             if(stat == null) {
                 String currentTimeStr = LocalDateTime.now().toString();
                 client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(workerPath, currentTimeStr.getBytes("UTF-8"));
-                log.warn("create workerPath={} in registerMySelf. threadId={}", workerPath, threadId);
+                log.info("create workerPath={} in registerMySelf. threadId={}", workerPath, threadId);
             }
             else {
                 log.warn("{} has already been registered. threadId={}", workerPath, threadId);
@@ -103,8 +103,7 @@ public class LeaderSelectorService {
     }
 
     public void watchAllSubList() {
-        try
-        {
+        try {
             PathChildrenCache watcher = new PathChildrenCache(
                     client,
                     PathConstants.ALL_SUB_PATH,
@@ -153,7 +152,7 @@ public class LeaderSelectorService {
             log.info("Register zk watcher 观察总的任务列表successfully!");
         }
         catch (Exception ex) {
-            log.info("观察总的任务列表 was interrupted.", ex);
+            log.error("观察总的任务列表 was interrupted.", ex);
         }
     }
 
@@ -219,15 +218,13 @@ public class LeaderSelectorService {
             watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
             log.info("Register zk watcher 观察自己的任务列表successfully!");
         }
-        catch (Exception ex)
-        {
-            log.info("观察自己的任务列表 was interrupted.", ex);
+        catch (Exception ex) {
+            log.error("观察自己的任务列表 was interrupted.", ex);
         }
     }
 
     private void watchWorkerList() {
-        try
-        {
+        try {
             //观察当前的worker， 有几个实例在工作
             PathChildrenCache watcher = new PathChildrenCache(
                     client,
@@ -283,9 +280,8 @@ public class LeaderSelectorService {
             watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
             log.info("Register zk watcher 观察workerList successfully!");
         }
-        catch (Exception ex)
-        {
-            log.info(instanceId + " has exception.", ex);
+        catch (Exception ex) {
+            log.error(instanceId + " has exception.", ex);
         }
     }
     /*
@@ -294,26 +290,23 @@ public class LeaderSelectorService {
     public List<String> getMySubList() {
         String workerSubListPath = PathConstants.MY_SUB_PATH + "/" + instanceId;
         List<String> subList = null;
-        try
-        {
+        try {
            subList = client.getChildren().forPath(workerSubListPath);
         }
-        catch (Exception ex)
-        {
-            log.info("获取自己的任务列表 was interrupted.", ex);
+        catch (Exception ex) {
+            log.warn("获取自己的任务列表 was interrupted.", ex);
         }
 
         return subList;
     }
 
     /*
- * 获取所有instance的订阅情况
- */
+     * 获取所有instance的订阅情况
+    */
     public Map<String ,List<String>> getAllWorkerSubList() {
         String allWorkerListPath = PathConstants.WORKER_PATH;
         Map<String ,List<String>> workerSubListMap = null;
-        try
-        {
+        try {
             List<String> workerList = client.getChildren().forPath(allWorkerListPath);
 
             if (workerList != null && !workerList.isEmpty()) {
@@ -338,7 +331,7 @@ public class LeaderSelectorService {
             }
         }
         catch (Exception ex) {
-            log.info("Get All instance sub list. exception", ex);
+            log.warn("Get All instance sub list. exception", ex);
         }
 
         return Collections.unmodifiableMap(workerSubListMap);
@@ -377,6 +370,4 @@ public class LeaderSelectorService {
         }
         return  allParticipants;
     }
-
-
 }

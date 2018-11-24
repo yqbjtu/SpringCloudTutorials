@@ -126,8 +126,8 @@ public class MyLeaderSelectorListener extends LeaderSelectorListenerAdapter impl
         try {
             countDownLatch.await();
         }
-        catch ( InterruptedException e ) {
-            log.info(instanceId + " was interrupted.");
+        catch (InterruptedException e ) {
+            log.info("{} was interrupted.", instanceId );
             Thread.currentThread().interrupt();
         }
         finally {

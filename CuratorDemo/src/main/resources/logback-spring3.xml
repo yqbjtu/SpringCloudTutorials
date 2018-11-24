@@ -51,9 +51,13 @@
 
     <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
+        <appender-ref ref="FILE" />
     </root>
 
+    <!-- FILE只记录 com.yq的信息-->
+    <logger name="org.apache.curator" level="DEBUG"  additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
 
 </configuration>

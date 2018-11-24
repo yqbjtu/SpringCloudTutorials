@@ -125,7 +125,7 @@ public class CuratorService {
             isOK = false;
         }
 
-        log.info("created topicPath {}, content=", topicPath, result);
+        log.info("created topicPath {}, content=, isOK={}", topicPath, content, isOK);
         return isOK;
     }
 
@@ -151,7 +151,7 @@ public class CuratorService {
 
     /*
      应该先检查是否存在
-      */
+    */
     public String getData(String path){
         byte[] existingValue = null;
         String result = null;

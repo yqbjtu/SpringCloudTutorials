@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ public class ZKController {
     @ApiOperation(value = "getMyList current uuid", notes="get")
     @ApiImplicitParams({
     })
+    @ResponseBody
     @GetMapping(value = "/getMyList", produces = "application/json;charset=UTF-8")
     public String getMyList() {
         List<String> list = leaderSvc.getMySubList();
@@ -50,6 +52,7 @@ public class ZKController {
     @ApiOperation(value = "getAllWorkerList uuid", notes="get")
     @ApiImplicitParams({
     })
+    @ResponseBody
     @GetMapping(value = "/getAllWorkerList", produces = "application/json;charset=UTF-8")
     public String getAllWorkerList() {
         Map<String, List<String>> map = leaderSvc.getAllWorkerSubList();
@@ -63,6 +66,7 @@ public class ZKController {
     @ApiOperation(value = "getLeader", notes="get")
     @ApiImplicitParams({
     })
+    @ResponseBody
     @GetMapping(value = "/getLeader", produces = "application/json;charset=UTF-8")
     public String getLeader() {
         Participant participant = leaderSvc.getCurrentLeader();

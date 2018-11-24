@@ -7,6 +7,8 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.retry.RetryNTimes;
 
+import java.util.concurrent.CountDownLatch;
+
 
 /**
  * Curator framework watch test.
@@ -15,7 +17,10 @@ public class CuratorWatcherTest {
 
     /** Zookeeper info */
     private static final String ZK_ADDRESS = "127.0.0.1:2181";
-    private static final String ZK_PATH = "/zktest";
+    //private static final String ZK_ADDRESS = "a:2181,b:2181,c:2181";
+    private static final String ZK_PATH = "/zktestyq";
+
+    private static CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public static void main(String[] args) throws Exception {
         // 1.Connect to zk
@@ -47,7 +52,7 @@ public class CuratorWatcherTest {
         watcher.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         System.out.println("Register zk watcher successfully!");
 
-        Thread.sleep(Integer.MAX_VALUE);
+        countDownLatch.await();
     }
 
 }
