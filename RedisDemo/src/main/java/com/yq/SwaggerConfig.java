@@ -31,7 +31,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport {
         return new ApiInfoBuilder()
                 .title("RESTful APIs")
                 .description("description")
-                .termsOfServiceUrl("yqbjtu")
+                .termsOfServiceUrl("https://github.com/yqbjtu/SpringCloudTutorials/tree/master/RedisDemo")
                 .version("1.0")
                 .build();
     }
