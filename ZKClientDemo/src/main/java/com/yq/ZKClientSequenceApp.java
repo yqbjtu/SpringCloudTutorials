@@ -1,6 +1,6 @@
 package com.yq;
 
-import com.yq.service.MyZooKeeper;
+
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.ZooKeeper;
@@ -33,20 +33,18 @@ public class ZKClientSequenceApp {
             log.info("zkParentPath={}", zkParentPath);
         }
 
-
         String zkPath = zk.create(CHILD_PATH_NAME_TEST, "helloWorld".getBytes(), ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT_SEQUENTIAL);
         log.info("zkPath={}", zkPath);
+
         List<String> children = zk.getChildren(PARENT_PATH_NAME_TEST, null);
 
-        try {
-            for(String seq : children) {
-                log.info("seq={}", seq);
-            }
-        }
-        catch (Exception ex){
-            log.info("start ex={}.", ex);
+        for(String seq : children) {
+            log.info("seq={}", seq);
         }
 
+        //生成序列后即可删除，默认刚创建的version为0.，
+        //当然如果我我们使用的 CreateMode.EPHEMERAL_SEQUENTIAL， 不用主动清理，在zk断开连接时就自动清理了，但是如果程序一致运行还是会有很多遗留节点的。
+        zk.delete(zkPath, 0);
         log.info("start done.");
     }
 }
