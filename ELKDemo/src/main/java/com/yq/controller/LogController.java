@@ -137,7 +137,7 @@ public class LogController {
     })
     @GetMapping("/logByAllNative/{all}")
     public Page<Log> findLogByAllNative(@PathVariable("all") String all) {
-        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("iot-test-2018.09.10")
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("logstash-test-2018.11.28")
                 .withQuery(QueryBuilders.matchPhraseQuery("_all", all))
                 .withPageable(new PageRequest(0, 10))
                 .build();

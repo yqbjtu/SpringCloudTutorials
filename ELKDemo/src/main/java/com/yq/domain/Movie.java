@@ -22,11 +22,5 @@ public class Movie {
 
     private String name;
 
-    @Field(type = FieldType.Nested)
-    private List<Genre> genre;
-
     private Double rating;
-
-    @Field(type = FieldType.Nested)
-    private Director director;
 }

@@ -59,7 +59,7 @@ import java.util.List;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(indexName = "aaa-2018.07.06", type = "logs", shards = 1, replicas = 0)
+@Document(indexName = "logstash-2018.12.02", type = "doc", shards = 1, replicas = 0)
 public class Log {
 
     @Id

@@ -35,7 +35,4 @@ public class MovieService {
         movieRepository.deleteById(id);
     }
 
-    public List<Movie> findByDirector(Director director) {
-        return movieRepository.findByDirector(director);
-    }
 }
