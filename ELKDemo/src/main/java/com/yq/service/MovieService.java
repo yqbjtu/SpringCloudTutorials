@@ -38,5 +38,4 @@ public class MovieService {
     public List<Movie> findByDirector(Director director) {
         return movieRepository.findByDirector(director);
     }
-
 }

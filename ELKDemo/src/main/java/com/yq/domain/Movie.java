@@ -29,5 +29,4 @@ public class Movie {
 
     @Field(type = FieldType.Nested)
     private Director director;
-
 }

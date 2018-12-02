@@ -15,5 +15,4 @@ import java.util.List;
 public interface LogRepository extends ElasticsearchRepository<Log, String> {
 
     List<Log> findByLevel(String level);
-
 }

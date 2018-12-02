@@ -35,6 +35,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 @RestController
 @Slf4j
 public class LogController {
+
     @Autowired
     private LogService logService;
 
@@ -114,7 +115,7 @@ public class LogController {
         String strfiveMinsBefore = format.format(fiveMinsBeforeWithGMT8);
         String strNow = format.format(nowWithGMT8);
         log.info("strfiveMinsBefore={}, strNow={}", strfiveMinsBefore, strNow);
-        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("iot-test-2018.09.10")
+        NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withIndices("logstash-test-2018.09.10")
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").gte(fiveMinsBefore))
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").lte(new Date()))
                 //.withQuery(QueryBuilders.rangeQuery("@timestamp").gte("2018-09-10T04:39:31.364Z")) ---如果大约和小于是and关系必须在一起

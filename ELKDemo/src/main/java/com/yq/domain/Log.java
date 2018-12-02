@@ -39,15 +39,15 @@ import java.util.List;
     "_score": 1,
     "_source": {
         "@timestamp": "2015-09-04T00:37:00.256Z",
-        "HOSTNAME": "aaaa-center-65",
+        "HOSTNAME": "aaaa-service-65",
         "level": "INFO",
         "port": 49744,
         "thread_name": "http-nio-6016-exec-3",
         "level_value": 20000,
         "@version": 1,
         "host": "150.276.13.165",
-        "logger_name": "org.x.y.z.ConnectorController",
-        "message": "Exit connectorAllCount, count=7",
+        "logger_name": "org.x.y.z.DomainAController",
+        "message": "Exit domainAAllCount, count=7",
         "tags": [
             "log4j-test"
         ]
@@ -77,14 +77,12 @@ public class Log {
     private String[] tags;
     //private int version;
 
-
-//    @Field(type = FieldType.Date, format = DateFormat.date_optional_time) ---timestamp is long
-   // @Field(type = FieldType.Date, format = DateFormat.basic_date_time )
+    //试图更改updateDate的时间显示格式
+    //@Field(type = FieldType.Date, format = DateFormat.date_optional_time) ---timestamp is long
+    //@Field(type = FieldType.Date, format = DateFormat.basic_date_time )
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second )
     @JsonProperty(value = "@timestamp")
     @JsonFormat(timezone = "GMT+8",pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private Date updateDate;
-
-
 }
