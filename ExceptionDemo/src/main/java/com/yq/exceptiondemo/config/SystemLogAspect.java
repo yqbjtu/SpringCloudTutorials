@@ -1,6 +1,9 @@
 
 package com.yq.exceptiondemo.config;
 
+import javassist.bytecode.SignatureAttribute;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -30,10 +33,10 @@ import java.lang.reflect.Method;
 @Component
 public class SystemLogAspect {
     //本地异常日志记录对象
-    private  static  final Logger logger = LoggerFactory.getLogger(SystemLogAspect. class);
+    private static final Logger logger = LoggerFactory.getLogger(SystemLogAspect. class);
 
     @Pointcut("@annotation(com.yq.exceptiondemo.config.SystemLog)")
-    public  void serviceAspect() {
+    public void serviceAspect() {
         System.out.println("我是一个切入点");
     }
 
@@ -126,12 +129,23 @@ public class SystemLogAspect {
      * @return 方法描述
      * @throws Exception
      */
-    public  static String getServiceMethodDescription(JoinPoint joinPoint)
+    public static String getServiceMethodDescription(JoinPoint joinPoint)
             throws Exception {
         String targetName = joinPoint.getTarget().getClass().getName();
         String methodName = joinPoint.getSignature().getName();
         Object[] arguments = joinPoint.getArgs();
         Class targetClass = Class.forName(targetName);
+
+        Class<?> classTarget = joinPoint.getTarget().getClass();
+        Signature sig = joinPoint.getSignature();
+        MethodSignature msig = null;
+        if (!(sig instanceof SignatureAttribute.MethodSignature)) {
+            throw new IllegalArgumentException("该注解只能用于方法");
+        }
+        Class<?>[] par = msig.getParameterTypes();
+        Method currentMethod = classTarget.getClass().getMethod(sig.getName(),  par);
+        String description1 = currentMethod.getAnnotation(SystemLog.class).description();
+
         Method[] methods = targetClass.getMethods();
         String description = "";
         for (Method method : methods) {
