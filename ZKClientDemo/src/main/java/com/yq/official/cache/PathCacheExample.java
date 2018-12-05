@@ -48,12 +48,12 @@ public class PathCacheExample
 
     public static void main(String[] args) throws Exception
     {
-        TestingServer       server = new TestingServer();
+
         CuratorFramework    client = null;
         PathChildrenCache   cache = null;
         try
         {
-            client = CuratorFrameworkFactory.newClient(server.getConnectString(), new ExponentialBackoffRetry(1000, 3));
+            client = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new ExponentialBackoffRetry(1000, 3));
             client.start();
 
             // in this example we will cache data. Notice that this is optional.
@@ -66,7 +66,6 @@ public class PathCacheExample
         {
             CloseableUtils.closeQuietly(cache);
             CloseableUtils.closeQuietly(client);
-            CloseableUtils.closeQuietly(server);
         }
     }
 
@@ -82,6 +81,7 @@ public class PathCacheExample
                 {
                     case CHILD_ADDED:
                     {
+
                         System.out.println("Node added: " + ZKPaths.getNodeFromPath(event.getData().getPath()));
                         break;
                     }

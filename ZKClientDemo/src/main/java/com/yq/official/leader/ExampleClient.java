@@ -70,18 +70,22 @@ public class ExampleClient extends LeaderSelectorListenerAdapter implements Clos
 
         System.out.println(name + " is now the leader. Waiting " + waitSeconds + " seconds...");
         System.out.println(name + " has been leader " + leaderCount.getAndIncrement() + " time(s) before.");
-        try
-        {
-            Thread.sleep(TimeUnit.SECONDS.toMillis(waitSeconds));
+
+        while(true) {
+            try
+            {
+                Thread.sleep(TimeUnit.SECONDS.toMillis(waitSeconds));
+            }
+            catch ( InterruptedException e )
+            {
+                System.err.println(name + " was interrupted.");
+                Thread.currentThread().interrupt();
+            }
+            finally
+            {
+                System.out.println(name + " relinquishing leadership.\n");
+            }
         }
-        catch ( InterruptedException e )
-        {
-            System.err.println(name + " was interrupted.");
-            Thread.currentThread().interrupt();
-        }
-        finally
-        {
-            System.out.println(name + " relinquishing leadership.\n");
-        }
+
     }
 }
