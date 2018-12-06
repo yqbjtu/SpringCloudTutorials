@@ -13,6 +13,8 @@ import org.springframework.data.redis.support.atomic.RedisAtomicLong;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Simple to Introduction
@@ -44,6 +46,29 @@ public class RedisServiceImpl implements RedisService {
     public String get(String key) {
         ValueOperations<String, String> ops = this.template.opsForValue();
         return ops.get(key);
+    }
+
+    @Override
+    public Boolean del(String key) {
+        ValueOperations<String, String> ops = this.template.opsForValue();
+        String value = ops.get(key);
+        return template.delete(key);
+    }
+
+    @Override
+    public int delByPattern(String keyPattern) {
+        Set<String>  keys = template.keys(keyPattern);
+        ValueOperations<String, String> ops = this.template.opsForValue();
+        int count = keys.size();
+        keys.forEach(new Consumer<String>() {
+            @Override
+            public void accept(String key) {
+                String value = ops.get(key);
+                template.delete(key);
+            }
+        });
+
+        return count;
     }
 
     @Override

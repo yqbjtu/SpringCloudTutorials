@@ -9,6 +9,8 @@ package com.yq.service;
  */
 public interface RedisService {
     String get(String key);
+    Boolean del(String key);
+    int delByPattern(String keyPattern) ;
     void set(String key, String value);
     String getHash(String key, String hashKey);
     void setHash(String key, String hashKey, String value);

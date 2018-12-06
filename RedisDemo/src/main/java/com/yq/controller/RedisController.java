@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,9 +38,29 @@ public class RedisController {
             @ApiImplicitParam(name = "key", value = "name1", required = true, dataType = "string", paramType = "path")
     })
     @GetMapping(value = "/keys/{key}", produces = "application/json;charset=UTF-8")
-    public String getUser(@PathVariable String key) {
+    public String getKey(@PathVariable String key) {
         String value = redisService.get(key);
         return value;
+    }
+
+    @ApiOperation(value = "删除key。 不支持匹配", notes="del")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "key", value = "name1, 放在path中太长会被截断", required = true, dataType = "string", paramType = "query")
+    })
+    @DeleteMapping(value = "/keys", produces = "application/json;charset=UTF-8")
+    public Boolean delKey(@RequestParam String key) {
+        Boolean value = redisService.del(key);
+        return value;
+    }
+
+    @ApiOperation(value = "删除keysPattern。 支持匹配", notes="del")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "keyPattern", value = "name1, 放在path中太长会被截断", required = true, dataType = "string", paramType = "query")
+    })
+    @DeleteMapping(value = "/keysPattern", produces = "application/json;charset=UTF-8")
+    public Integer delByPattern(@RequestParam String keyPattern) {
+        int count = redisService.delByPattern(keyPattern);
+        return count;
     }
 
     @ApiOperation(value = "创建key value", notes="post")
@@ -48,7 +69,8 @@ public class RedisController {
             @ApiImplicitParam(name = "value", value = "value01", required = true, dataType = "string", paramType = "query")
     })
     @PostMapping(value = "/keys/{key}", produces = "application/json;charset=UTF-8")
-    public String getUser(@PathVariable String key, @RequestParam String value) {
+    public String setKey(@PathVariable String key, @RequestParam String value) {
+
         redisService.set(key, value);
         value = redisService.get(key);
         return value;
