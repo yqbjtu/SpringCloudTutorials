@@ -3,6 +3,7 @@
 package com.yq.controller;
 
 import com.yq.client.UserServiceClient;
+import com.yq.domain.User;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
@@ -29,8 +30,8 @@ public class UserController {
             @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "string", paramType = "path"),
     })
     @GetMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
-    public String getUser(@PathVariable String userId) {
-        String user = userServiceClient.getUser(userId);
+    public User getUser(@PathVariable String userId) {
+        User user = userServiceClient.getUser(userId);
         return user;
     }
 
@@ -39,8 +40,8 @@ public class UserController {
             @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "string", paramType = "query"),
     })
     @GetMapping(value = "/users/queryById", produces = "application/json;charset=UTF-8")
-    public String getUserByQueryParam(@RequestParam String userId) {
-        String user = userServiceClient.getUserByQueryParam(userId);
+    public User getUserByQueryParam(@RequestParam String userId) {
+        User user = userServiceClient.getUserByQueryParam(userId);
         return user;
     }
 

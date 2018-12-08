@@ -1,6 +1,7 @@
 package com.yq.client;
 
 
+import com.yq.domain.User;
 import feign.hystrix.FallbackFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -16,10 +17,10 @@ public interface UserServiceClient {
 
 
     @RequestMapping(value="/v1/users/{userId}", method= RequestMethod.GET, produces = "application/json;charset=UTF-8")
-    public String getUser(@PathVariable(value = "userId") String userId);
+    public User getUser(@PathVariable(value = "userId") String userId);
 
     @RequestMapping(value="/v1/users/queryById", method= RequestMethod.GET, produces = "application/json;charset=UTF-8")
-    public String getUserByQueryParam(@RequestParam("userId") String userId);
+    public User getUserByQueryParam(@RequestParam("userId") String userId);
 
     @RequestMapping(value="/v1/users", method= RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String createUser();
@@ -32,15 +33,15 @@ class UserServiceFallbackFactory implements FallbackFactory<UserServiceClient> {
     public UserServiceClient create(final Throwable throwable) {
         return new UserServiceClient() {
             @Override
-            public String getUser(String userId) {
+            public User getUser(String userId) {
                 log.warn("Fallback reason={}, userId={}", throwable.getMessage(), userId);
-                return "SvcCall Error1";
+                return null;
             }
 
             @Override
-            public String getUserByQueryParam(String userId) {
+            public User getUserByQueryParam(String userId) {
                 log.warn("Fallback reason={}, userId={}", throwable.getMessage(), userId);
-                return "SvcCall Error2";
+                return null;
             }
 
             @Override
