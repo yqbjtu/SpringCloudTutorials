@@ -19,16 +19,19 @@ function connect() {
     //var sockjs_url = 'http://localhost:8080/websocket';
     //var sockjs_url = '/websocket';
     //var sockjs_url = 'http://127.0.0.1:6604/bullet';
-    //var sockjs_url = 'http://127.0.0.1:6605/websocket';
-    var sockjs_url = 'https://iotblue.c.citic:1443/service/endpointWisely';
+    //var sockjs_url = 'http://localhost:1443/websocket';
+    var sockjs_url = 'http://localhost:1443/service/endpointWisely';
+    //var sockjs_url = 'http://websocket-service.jianan.devops.c.citic/service/endpointWisely';
+    //var sockjs_url = 'http://localhost:8086/websocket';
+    //var sockjs_url = 'https://iotblue.c.citic:1443/service/endpointWisely';
     var socket = new SockJS(sockjs_url);
     stompClient = Stomp.over(socket);
     stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
 
-        stompClient.subscribe('/topic/pointStatePerPage/f798ae4ff47848ceae100f257a563fcc', function (greeting) {
-            console.log("subscribe edbb:" + greeting);
+        stompClient.subscribe('/topic/shadow/705117a0cf1a487e8df6902dd5ece030', function (greeting) {
+            console.log("subscribe shadow---:" + greeting);
             showGreeting(JSON.parse(greeting.body).content);
         });
     });
@@ -43,7 +46,7 @@ function disconnect() {
 }
 
 function sendName() {
-    stompClient.send("/app/hello", {}, JSON.stringify({'name': $("#name").val()}));
+    stompClient.send("/topic/shadow/705117a0cf1a487e8df6902dd5ece030", {}, JSON.stringify({'name': $("#name").val()}));
 }
 
 function showGreeting(message) {

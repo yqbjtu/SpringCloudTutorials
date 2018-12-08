@@ -21,7 +21,7 @@ controller中发送过来的消息页面也可以收到
 [INFO ] 22:17:02.811 [http-nio-8080-exec-7] com.yq.config.WebSocketConfig - Inbound preSend: sessionId=whhidk5t, jwtToken=yqbjtu
 
 js代码先connect，然后subscribe
-也就是所有的基本操作都是
+也就是所有的Connect操作都是
 Inbound preSend
 Inbound postSend
 Inbound afterSendCompletion
@@ -29,7 +29,7 @@ Outbound preSend
 Outbound postSend
 Outbound afterSendCompletion
 
-对于subscribe这样的不需要去人的就是只有
+对于subscribe这样的操作不需要outbound的就是只有三个inbound
 Inbound preSend
 Inbound postSend
 Inbound afterSendCompletion
@@ -57,4 +57,11 @@ Inbound afterSendCompletion
   [INFO ] 19:15:25.756 [http-nio-8086-exec-8] com.yq.config.WebSocketConfig - Outbound postSend. message=GenericMessage [payload=byte[12], headers={simpMessageType=MESSAGE, simpSubscriptionId=sub-0, contentType=text/plain;charset=UTF-8, simpSessionId=twhhlp14, simpDestination=/topic/app01}]
   [INFO ] 19:15:25.757 [http-nio-8086-exec-8] com.yq.config.WebSocketConfig - Outbound afterSendCompletion. message=GenericMessage [payload=byte[12], headers={simpMessageType=MESSAGE, simpSubscriptionId=sub-0, contentType=text/plain;charset=UTF-8, simpSessionId=twhhlp14, simpDestination=/topic/app01}]
   [INFO ] 19:15:25.757 [http-nio-8086-exec-8] com.yq.controller.GreetingController - sendMessage to /topic/app01 with {"name":610}  
+  
+  
+  https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/websocket.html#websocket-server-allowed-origins  
+    
+    
+    https://www.nexmo.com/blog/2018/10/08/create-websocket-server-spring-boot-dr/
+  
   

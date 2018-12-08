@@ -130,10 +130,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     SimpMessageType type = accessor.getCommand().getMessageType();
                     if (type == SimpMessageType.SUBSCRIBE) {
                         String topicDest = (String)header.get("simpDestination");
+//                        String payload = "{\"name\":\"afterSendCompletion\"}";
+//                        MyRunnable myRunnable = new MyRunnable(messagingTemplate, topicDest);
+//                        executor.submit(myRunnable);
+//                        log.info("subscribe topicDest={}, message={} SUBSCRIBE", topicDest, message);
+
                         String payload = "{\"name\":\"afterSendCompletion\"}";
-                        MyRunnable myRunnable = new MyRunnable(messagingTemplate, topicDest);
-                        executor.submit(myRunnable);
-                        log.info("subscribe topicDest={}, message={} SUBSCRIBE", topicDest, message);
+                        messagingTemplate.convertAndSend(topicDest, payload);
+                        log.info("send complete. deviceId={}", topicDest);
                     }
                 }
             }

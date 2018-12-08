@@ -49,7 +49,7 @@ public class SvcInfoController {
 
     @ApiOperation(value = "按服务name查询 by discoveryClient")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "name", value = "user-service", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "name", defaultValue = "user-service", value = "服务名称,例如commodity-service", required = true, dataType = "string", paramType = "query"),
     })
     @GetMapping(value = "/infoByDiscoveryClient", produces = "application/json;charset=UTF-8")
     public String getInfoByDiscoveryClient(@RequestParam String name) {
@@ -88,7 +88,7 @@ public class SvcInfoController {
 
     @ApiOperation(value = "按服务name查询 by consulDiscoveryClient")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "name", value = "user-service", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "name", defaultValue = "user-service", value = "服务名称,例如commodity-service",  required = true, dataType = "string", paramType = "query"),
     })
     @GetMapping(value = "/infoByConsulDiscoveryClient", produces = "application/json;charset=UTF-8")
     public String getInfo(@RequestParam String name) {

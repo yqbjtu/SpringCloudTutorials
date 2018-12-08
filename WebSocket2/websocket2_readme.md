@@ -13,6 +13,7 @@ There was an unexpected error (type=Bad Request, status=400).
 Invalid 'Upgrade' header: {Host=[127.0.0.1:6604], User-Agent=[Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101 Firefox/60.0], Accept=[text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8], Accept-Language=[en-US,zh-CN;q=0.8,zh;q=0.7,zh-TW;q=0.5,zh-HK;q=0.3,en;q=0.2], Accept-Encoding=[gzip, deflate], Connection=[keep-alive], Upgrade-Insecure-Requests=[1]}
 
 
+http://localhost:8087
 一定要先启动websocket服务，然后启动gateway，websocket就能通过6604端口正常工作
 
 通过日志发现，如果websocket服务被解析成ws://localhost:6605， 就能进行下去，如果被解析成真实ip地址，就无法进行下去了，这是因为localhost:6605是websocket的真实ip和端口，但是192xxxx反倒无法使用。
