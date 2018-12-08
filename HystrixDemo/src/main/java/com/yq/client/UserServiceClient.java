@@ -18,6 +18,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @FeignClient(value = "user-service", fallback = UserServiceClientFallbackFactory.class)
 @Component
 public interface UserServiceClient {
-    @RequestMapping(value = "/user/users/{userId}", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
+    @RequestMapping(value = "/v1/users/{userId}", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
     String getUserDetail(@PathVariable("userId") String userId);
 }

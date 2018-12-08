@@ -1,5 +1,6 @@
 
-spring.cloud.consul.enabled=false 导致import org.springframework.cloud.client.serviceregistry.Registration;直接无法启动  
+spring.cloud.consul.enabled=false 
+导致import org.springframework.cloud.client.serviceregistry.Registration;直接无法启动  
 
 因此后面将SvcInfoController注释了  
 
@@ -11,7 +12,8 @@ http://127.0.0.1:7009/hystrix.stream  在chrome浏览器上不断出现ping  pin
 http://localhost:7009/turbine.stream 
 
 
-在程序的入口HystrixDemoApplication类，加上@EnableHystrix注解开启断路器，这个是必须的，并且需要在程序中声明断路点HystrixCommand；
+在程序的入口HystrixDemoApplication类，加上@EnableHystrix注解开启断路器，这个是必须的，
+并且需要在程序中声明断路点HystrixCommand；
 加上@EnableHystrixDashboard注解，开启HystrixDashboard  
 
 http://projects.spring.io/spring-cloud/spring-cloud.html#_turbine 

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Component
 public interface UserClient {
 
-    @RequestMapping(value = "/user/users/{userId}", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
+    @RequestMapping(value = "/v1/users/{userId}", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
     String getUserDetail(@PathVariable("userId") String userId);
 
 }

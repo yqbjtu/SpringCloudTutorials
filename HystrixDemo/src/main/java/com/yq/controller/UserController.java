@@ -44,7 +44,6 @@ public class UserController {
             user.setRegDate(new Date());
             userMap.put(i+ "",user );
         }
-
     }
 
     @ApiOperation(value = "按用户id查询", notes="private")
