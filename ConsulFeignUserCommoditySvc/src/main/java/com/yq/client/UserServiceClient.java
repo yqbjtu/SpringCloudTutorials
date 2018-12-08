@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(value = "user-service", fallbackFactory = UserServiceFallbackFactory.class)
 public interface UserServiceClient {
 
-
     @RequestMapping(value="/v1/users/{userId}", method= RequestMethod.GET, produces = "application/json;charset=UTF-8")
     public User getUser(@PathVariable(value = "userId") String userId);
 
