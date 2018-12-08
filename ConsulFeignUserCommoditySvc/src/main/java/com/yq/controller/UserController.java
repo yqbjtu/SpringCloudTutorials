@@ -1,11 +1,13 @@
+
+
 package com.yq.controller;
 
-import com.yq.domain.User;
+import com.yq.client.UserServiceClient;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,36 +15,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 
 @RestController
-@RequestMapping("/v1")
+@RequestMapping("/my")
+@Slf4j
 public class UserController {
-    private Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    private Map<String, User> userMap = new HashMap<>();
-    {
-        for(int i=0;i < 5; i++) {
-            User user = new User();
-            user.setId(i + "");
-            user.setMail("qq" + i + "@163.com");
-            user.setName("Tom" + i );
-            user.setRegDate(new Date());
-            userMap.put(i+ "",user );
-        }
-    }
+    @Autowired
+    UserServiceClient userServiceClient;
 
     @ApiOperation(value = "按用户id查询， 参数在path部分", notes="private")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "string", paramType = "path"),
     })
     @GetMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
-    public User getUser(@PathVariable String userId) {
-        User user = (User)userMap.get(userId);
+    public String getUser(@PathVariable String userId) {
+        String user = userServiceClient.getUser(userId);
         return user;
     }
 
@@ -51,21 +39,16 @@ public class UserController {
             @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "string", paramType = "query"),
     })
     @GetMapping(value = "/users/queryById", produces = "application/json;charset=UTF-8")
-    public User getUserByQueryParam(@RequestParam String userId) {
-        User user = (User)userMap.get(userId);
+    public String getUserByQueryParam(@RequestParam String userId) {
+        String user = userServiceClient.getUserByQueryParam(userId);
         return user;
     }
 
-    @ApiOperation(value = "创建用户， 为演示异常处理，这里直接抛出异常")
+    @ApiOperation(value = "创建用户， 为演示服务间调用异常处理，这里user-service对应的rest会直接抛出异常")
     @PostMapping(value = "/users", produces = "application/json;charset=UTF-8")
-    public User createUser() throws Exception {
-        throw new Exception("create user exception");
+    public String createUser() throws Exception {
+        String user = userServiceClient.createUser();
+        return user;
     }
 
-    @ApiOperation(value = "查询所有用户")
-    @GetMapping(value = "/users", produces = "application/json;charset=UTF-8")
-    public Iterable<User> findAllUsers() {
-        Collection<User> users = userMap.values();
-        return users;
-    }
 }
