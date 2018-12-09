@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @version 2018/10/14 21:06
  */
 
-//fallback = FallbackSayService.class
+
 @FeignClient(value = "user-service", fallback = UserServiceClientFallbackFactory.class)
 @Component
 public interface UserServiceClient {

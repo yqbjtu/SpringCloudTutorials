@@ -2,6 +2,7 @@
 
 package com.yq.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -18,5 +19,7 @@ public class User {
     String id;
     String name;
     String mail;
+
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     Date regDate;
 }

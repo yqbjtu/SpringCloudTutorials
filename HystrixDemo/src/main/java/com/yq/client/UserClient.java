@@ -37,8 +37,8 @@ class UserClientFallbackFactory implements FallbackFactory<UserClient> {
             @Override
             public String getUserDetail(String userId) {
                 logger.error("Fallback reason = {}, userId={}", throwable.getMessage(), userId, throwable);
-                //throw new RuntimeException(throwable.getCause());
-                return "FeignFactory user-service not available when query '" + userId + "'";
+
+                return "FallbackFactory<UserClient> user-service not available when query '" + userId + "'";
             }
         };
     }

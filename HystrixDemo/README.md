@@ -8,6 +8,7 @@ http://127.0.0.1:7009/swagger-ui.html
 
 http://127.0.0.1:7009/hystrix
 
+http://cloud.spring.io/spring-cloud-openfeign/single/spring-cloud-openfeign.html#spring-cloud-feign-hystrix-fallback  
 http://127.0.0.1:7009/hystrix.stream  在chrome浏览器上不断出现ping  ping的字符串  
 http://localhost:7009/turbine.stream 
 
