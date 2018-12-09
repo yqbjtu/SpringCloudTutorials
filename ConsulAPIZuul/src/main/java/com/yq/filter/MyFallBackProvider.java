@@ -27,21 +27,15 @@ class MyFallBackProvider implements FallbackProvider {
     public ClientHttpResponse fallbackResponse(String route, Throwable cause) {
         log.error("zuul exception, msg={}", cause.getMessage(), cause);
         if (cause instanceof HystrixTimeoutException) {
-            return response(HttpStatus.GATEWAY_TIMEOUT);
+            return response(HttpStatus.GATEWAY_TIMEOUT, route);
         } else if (cause instanceof ClientException) {
-            return response(HttpStatus.SERVICE_UNAVAILABLE);
+            return response(HttpStatus.SERVICE_UNAVAILABLE, route);
         } else {
-            return fallbackResponse();
+            return response(HttpStatus.INTERNAL_SERVER_ERROR, route);
         }
     }
 
-
-
-    public ClientHttpResponse fallbackResponse() {
-        return response(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    private ClientHttpResponse response(final HttpStatus status) {
+    private ClientHttpResponse response(final HttpStatus status, final String route) {
         return new ClientHttpResponse() {
             @Override
             public HttpStatus getStatusCode() throws IOException {
@@ -65,7 +59,8 @@ class MyFallBackProvider implements FallbackProvider {
             @Override
             public InputStream getBody() throws IOException {
                 log.error("Zuul MyFallBackProvider. msg={}", status.toString());
-                StringBuffer buffer = new StringBuffer("fallback. status").append(status.getReasonPhrase());
+                StringBuffer buffer = new StringBuffer("fallback. service:").append(route)
+                        .append(", status:").append(status.getReasonPhrase());
                 return new ByteArrayInputStream(buffer.toString().getBytes());
             }
 
