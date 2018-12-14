@@ -14,25 +14,23 @@ function setConnected(connected) {
 
 function connect() {
 //端口是这个application的端口，也就是看application.properties中的设置，默认就是8080, 必须配置成localhost，而不能使用127.0.0.1，否则有跨域问题
-    //var socket = new SockJS('/websocket');
+    //var socket = new SockJS('/myEndPoint');
 
-    //var sockjs_url = 'http://localhost:8080/websocket';
-    //var sockjs_url = '/websocket';
-    //var sockjs_url = 'http://127.0.0.1:6604/bullet';
-    //var sockjs_url = 'http://localhost:1443/websocket';
-    var sockjs_url = 'http://localhost:1443/service/endpointWisely';
-    //var sockjs_url = 'http://websocket-service.jianan.devops.c.citic/service/endpointWisely';
-    //var sockjs_url = 'http://localhost:8086/websocket';
-    //var sockjs_url = 'https://iotblue.c.citic:1443/service/endpointWisely';
+    //var sockjs_url = '/myEndPoint';
+    var sockjs_url = 'http://localhost:8088/myEndPoint';
+
     var socket = new SockJS(sockjs_url);
     stompClient = Stomp.over(socket);
     stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
         setConnected(true);
         console.log('Connected: ' + frame);
 
-        stompClient.subscribe('/topic/shadow/705117a0cf1a487e8df6902dd5ece030', function (greeting) {
-            console.log("subscribe shadow---:" + greeting);
-            showGreeting(JSON.parse(greeting.body).content);
+        stompClient.subscribe('/myPrefixes/topic01/705117a0cf1a487e8df6902dd5ece030', function (greeting) {
+            console.log("subscribe topic01---:" + greeting);
+            console.log("subscribe greeting.body---:" + greeting.body);
+            console.log("subscribe json greeting.body---:" + JSON.parse(greeting.body));
+            console.log("subscribe json greeting.body name---:" + JSON.parse(greeting.body).myfield1);
+            showGreeting(JSON.parse(greeting.body).myfield1);
         });
     });
 }
@@ -46,7 +44,7 @@ function disconnect() {
 }
 
 function sendName() {
-    stompClient.send("/topic/shadow/705117a0cf1a487e8df6902dd5ece030", {}, JSON.stringify({'name': $("#name").val()}));
+    stompClient.send("/myPrefixes/topic01/705117a0cf1a487e8df6902dd5ece030", {}, JSON.stringify({'myfield1': $("#name").val()}));
 }
 
 function showGreeting(message) {

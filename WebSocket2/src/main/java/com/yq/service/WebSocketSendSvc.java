@@ -3,6 +3,7 @@ package com.yq.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +22,13 @@ import java.util.Map;
  */
 
 @Service
+@Slf4j
 public class WebSocketSendSvc {
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketSendSvc.class);
-
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     public void send(String topic, String messageBody) {
-        logger.debug("messageBody={}", messageBody);
+        log.debug("topic={}, messageBody={}", messageBody);
         messagingTemplate.convertAndSend(topic, messageBody);
     }
 }

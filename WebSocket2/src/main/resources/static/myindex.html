@@ -27,7 +27,7 @@
 <script type="text/javascript">
         var stompClient = null;
         //gateway网关的地址
-        var host="http://127.0.0.1:6604";
+        var host="http://127.0.0.1:8088";
         function setConnected(connected) {
             document.getElementById('connect').disabled = connected;
             document.getElementById('disconnect').disabled = !connected;
@@ -37,13 +37,13 @@
 
         function connect() {
             //地址+端点路径，构建websocket链接地址
-            var socket = new SockJS(host+'/bullet');
+            var socket = new SockJS(host+'/myEndPoint');
             stompClient = Stomp.over(socket);
             stompClient.connect({}, function(frame) {
                 setConnected(true);
                 console.log('Connected:' + frame);
                 //监听的路径以及回调
-                stompClient.subscribe('/topic/app01', function(response) {
+                stompClient.subscribe('/myPrefixes/topic01/705117a0cf1a487e8df6902dd5ece030', function(response) {
                     showResponse(response.body);
                 });
 
@@ -63,7 +63,7 @@
             var name = $('#name').val();
             var message = $('#messgae').val();
             //发送消息的路径
-            stompClient.send("/chat", {}, JSON.stringify({username:name,message:message}));
+            stompClient.send("/myPrefixes/topic01/705117a0cf1a487e8df6902dd5ece030", {}, JSON.stringify({myfield1:name,message:message}));
         }
 
         function showResponse(message) {
