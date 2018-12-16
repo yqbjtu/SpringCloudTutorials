@@ -3,6 +3,7 @@ package com.yq.config;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.yq.service.MyRunnable;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,32 +76,38 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 log.info("Inbound preSend. message={}", message);
-//                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-//                MessageHeaders header = message.getHeaders();
-//                String sessionId = (String)header.get("simpSessionId");
-//                if (accessor != null && accessor.getCommand() !=null && accessor.getCommand().getMessageType() != null) {
-//                    SimpMessageType type = accessor.getCommand().getMessageType();
-//                    if (accessor!= null && SimpMessageType.CONNECT.equals(type)) {
-//                        //Authentication user = "aaa" ; // access authentication header(s)
-//                        // accessor.setUser(user);
-//                        String jwtToken = accessor.getFirstNativeHeader("AuthToken");
-//                        log.info("Inbound preSend: sessionId={}, jwtToken={}", sessionId, jwtToken);
-//                    }else if (type == SimpMessageType.DISCONNECT) {
-//                        log.info("Inbound sessionId={} is disconnected", sessionId);
-//                    }else if (type == SimpMessageType.SUBSCRIBE) {
-//                        String topicDest = (String)header.get("simpDestination");
-//                        String payload = "{\"code\":60}";
-//                        //messagingTemplate.setUserDestinationPrefix("/");
-//                        //messagingTemplate.convertAndSend("/app01", payload);
-//                        //message = sendInitMsg(message, topicDest, null, payload);
-//                        MyRunnable myRunnable = new MyRunnable(messagingTemplate, topicDest);
-//                        executor.submit(myRunnable);
-//                        log.info("subscribe topicDest={}, message={} SUBSCRIBE", topicDest, message);
-//                    } else if (type == SimpMessageType.MESSAGE) {
-//                        String topicDest = (String)header.get("simpDestination");
-//                        message = UpdateMessage(message, "Inbound");
-//                    }
-//                }
+                StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
+                MessageHeaders header = message.getHeaders();
+                String sessionId = (String)header.get("simpSessionId");
+                if (accessor != null && accessor.getCommand() !=null && accessor.getCommand().getMessageType() != null) {
+                    SimpMessageType type = accessor.getCommand().getMessageType();
+                    if (accessor!= null && SimpMessageType.CONNECT.equals(type)) {
+                        String jwtToken = accessor.getFirstNativeHeader("AuthToken");
+
+                        if(StringUtils.isNotBlank(jwtToken)) {
+                            log.info("Inbound preSend: sessionId={}, jwtToken={}", sessionId, jwtToken);
+                        }
+                        else {
+                            log.error("no token, will be disallowed to connect.");
+
+                            return null;
+                        }
+                    }else if (type == SimpMessageType.DISCONNECT) {
+                        log.info("Inbound sessionId={} is disconnected", sessionId);
+                    }else if (type == SimpMessageType.SUBSCRIBE) {
+                        String topicDest = (String)header.get("simpDestination");
+                        String payload = "{\"code\":60}";
+                        //messagingTemplate.setUserDestinationPrefix("/");
+                        //messagingTemplate.convertAndSend("/app01", payload);
+                        //message = sendInitMsg(message, topicDest, null, payload);
+                        MyRunnable myRunnable = new MyRunnable(messagingTemplate, topicDest);
+                        executor.submit(myRunnable);
+                        log.info("subscribe topicDest={}, message={} SUBSCRIBE", topicDest, message);
+                    } else if (type == SimpMessageType.MESSAGE) {
+                        String topicDest = (String)header.get("simpDestination");
+                        message = UpdateMessage(message, "Inbound");
+                    }
+                }
 
                 return message;
             }

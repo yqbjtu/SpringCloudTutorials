@@ -18,6 +18,9 @@ public interface UserServiceClient {
     @RequestMapping(value="/v1/users/{userId}", method= RequestMethod.GET, produces = "application/json;charset=UTF-8")
     public User getUser(@PathVariable(value = "userId") String userId);
 
+    @RequestMapping(value="/v1/usersWithSleep/{userId}", method= RequestMethod.GET, produces = "application/json;charset=UTF-8")
+    public User getUserWithSleep(@PathVariable(value = "userId") String userId, @RequestParam("sleepTimeMillis") Long sleepTimeMillis);
+
     @RequestMapping(value="/v1/users/queryById", method= RequestMethod.GET, produces = "application/json;charset=UTF-8")
     public User getUserByQueryParam(@RequestParam("userId") String userId);
 
@@ -34,6 +37,11 @@ class UserServiceFallbackFactory implements FallbackFactory<UserServiceClient> {
             @Override
             public User getUser(String userId) {
                 log.warn("Fallback reason={}, userId={}", throwable.getMessage(), userId);
+                return null;
+            }
+
+            public User getUserWithSleep(String userId, Long sleepTimeMillis) {
+                log.warn("Fallback reason={}, userId={}, sleepTimeMillis={}", throwable.getMessage(), userId, sleepTimeMillis);
                 return null;
             }
 

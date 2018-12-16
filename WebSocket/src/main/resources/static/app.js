@@ -20,9 +20,11 @@ function connect() {
     var sockjs_url = 'http://localhost:8086/websocket';
     var socket = new SockJS(sockjs_url);
     stompClient = Stomp.over(socket);
+
     //var token = localStorage.getItem('Auth-Token') //
     //stompClient.connect({'Auth-Token': token},
-    stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
+    //stompClient.connect({'AuthToken': 'yqbjtu'}, function (frame) {
+    stompClient.connect({}, function (frame) {
         setConnected(true);
         console.log('Connected:');
         //stompClient.subscribe('/topic/greetings'+, function (greeting) {

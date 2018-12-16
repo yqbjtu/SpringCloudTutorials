@@ -35,6 +35,17 @@ public class UserController {
         return user;
     }
 
+    @ApiOperation(value = "按用户id查询， 参数在path部分和query， 另外加上sleep，演示超时效果", notes="private")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "sleepTimeMillis", defaultValue = "6000", value = "sleepTimeMillis", required = true, dataType = "int", paramType = "query")
+    })
+    @GetMapping(value = "/usersWithSleep/{userId}", produces = "application/json;charset=UTF-8")
+    public User getUserWithSleep(@PathVariable String userId, @RequestParam Long sleepTimeMillis) {
+        User user = userServiceClient.getUserWithSleep(userId, sleepTimeMillis);
+        return user;
+    }
+
     @ApiOperation(value = "按用户id查询， 只是为了演示参数在query部分", notes="private")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", defaultValue = "2", value = "userID", required = true, dataType = "string", paramType = "query"),
