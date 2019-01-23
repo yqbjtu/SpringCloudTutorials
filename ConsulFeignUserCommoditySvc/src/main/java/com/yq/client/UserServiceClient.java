@@ -40,6 +40,7 @@ class UserServiceFallbackFactory implements FallbackFactory<UserServiceClient> {
                 return null;
             }
 
+            @Override
             public User getUserWithSleep(String userId, Long sleepTimeMillis) {
                 log.warn("Fallback reason={}, userId={}, sleepTimeMillis={}", throwable.getMessage(), userId, sleepTimeMillis);
                 return null;
