@@ -25,15 +25,12 @@ public interface FileServiceClient {
 
     /**
      * @param filePath
-     * @param userId
      * @param comment
      * @return
      */
     @PostMapping(value = "/v1/file/uploadFile", produces = "application/json;charset=UTF-8", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     String uploadFile(@RequestPart("file") MultipartFile file, @RequestParam("filePath") String filePath,
-                      @RequestParam("userId") String userId,
                       @RequestParam("comment") String comment);
-
 }
 
 @Component
@@ -45,7 +42,6 @@ class FileServiceFactory implements FallbackFactory<FileServiceClient> {
 
             @Override
             public String uploadFile(MultipartFile file, @RequestParam("filePath") String filePath,
-                       @RequestParam("userId") String userId,
                        @RequestParam("comment") String comment) {
                 log.warn("Failed to uploadFile. Fallback reason = {}", throwable.getMessage());
                 throw new RuntimeException(throwable.getCause());

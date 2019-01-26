@@ -32,13 +32,13 @@ public class FileController {
     @Autowired
     private FileServiceClient fileSvcClient;
 
-    @ApiOperation(value = "上传文件， 为演示服务间调用传递文件")
+    @ApiOperation(value = "上传文件， 演示服务间调用传递文件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "content", defaultValue = "abcd", value = "文件内容", required = true, dataType = "string", paramType = "query"),
             @ApiImplicitParam(name = "fileName",defaultValue = "fileRule01.txt", value = "文件名称", required = true, dataType = "string", paramType = "query")
     })
-    @GetMapping(value = "/testFileUpload", produces = "application/json;charset=UTF-8")
-    public String testUploadFileForRule(@RequestParam(required = true, defaultValue = "fileRule01.txt") String fileName,
+    @PostMapping(value = "/testFileUpload", produces = "application/json;charset=UTF-8")
+    public String testUploadFile(@RequestParam(required = true, defaultValue = "fileRule01.txt") String fileName,
                                         @RequestParam(required = true, defaultValue = "abcd") String content,
                                         HttpServletRequest request) {
         String result = "not upload";
@@ -47,9 +47,8 @@ public class FileController {
             byte[] bytes = content.getBytes("UTF-8");
             MultipartFile multipartFile = new MockMultipartFile("file", fileName, "text/plain", bytes);
 
-            String userId = "testUserId";
             String comment = "演示FeignClient文件上传";
-            String  uploadResult = fileSvcClient.uploadFile(multipartFile, "mypath1/", userId, comment);
+            result = fileSvcClient.uploadFile(multipartFile, "mypath1/", comment);
 
         }
         catch (UnsupportedEncodingException ex) {
@@ -58,4 +57,28 @@ public class FileController {
 
         return result;
     }
+
+    @ApiOperation(value = "上传文件， 演示服务间调用传递文件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "file", defaultValue = "file1.txt", value = "文件内容", required = true, dataType = "file", paramType = "query")
+
+    })
+    @PostMapping(value = "/testFileUploadDirectly", produces = "application/json;charset=UTF-8")
+    public String testUploadFileDirectly(@RequestParam("file") MultipartFile file) {
+        String result = "not upload";
+
+        try {
+            MultipartFile multipartFile = file;
+
+            String comment = "演示FeignClient文件上传";
+            result = fileSvcClient.uploadFile(multipartFile, "mypath1/", comment);
+
+        }
+        catch (Exception ex) {
+            log.warn("Failed to upload", ex);
+        }
+
+        return result;
+    }
+
 }
