@@ -49,7 +49,6 @@ public class FileController {
 
             String comment = "演示FeignClient文件上传";
             result = fileSvcClient.uploadFile(multipartFile, "mypath1/", comment);
-
         }
         catch (UnsupportedEncodingException ex) {
             log.warn("Failed to convert content={} to bytes", content, ex);
@@ -72,7 +71,6 @@ public class FileController {
 
             String comment = "演示FeignClient文件上传";
             result = fileSvcClient.uploadFile(multipartFile, "mypath1/", comment);
-
         }
         catch (Exception ex) {
             log.warn("Failed to upload", ex);

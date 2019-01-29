@@ -20,3 +20,7 @@ To disable the Consul Discovery Client you can set spring.cloud.consul.discovery
 To disable the service registration you can set spring.cloud.consul.discovery.register to false.
 
 You can disable the health check by setting management.health.consul.enabled=false.
+
+https  
+https://www.tutorialspoint.com/spring_boot/spring_boot_enabling_https.htm
+https://127.0.0.1:7001/swagger-ui.html
