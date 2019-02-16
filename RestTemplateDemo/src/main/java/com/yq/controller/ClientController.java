@@ -29,7 +29,7 @@ import org.springframework.util.concurrent.ListenableFuture;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -129,6 +129,7 @@ public class ClientController {
     })
     @GetMapping(value = "/requestByAsyncRestTemplate/{userId}", produces = "application/json;charset=UTF-8")
     public String getUser(@PathVariable String userId) {
+        //AsyncRestTemplate无法在https情况下工作
         try {
             this.eventLoopGroup = new NioEventLoopGroup();
             Netty4ClientHttpRequestFactory nettyFactory = new Netty4ClientHttpRequestFactory(this.eventLoopGroup);
@@ -194,7 +195,7 @@ public class ClientController {
             @ApiImplicitParam(name = "userId", value = "userID", defaultValue = "2",required = true, dataType = "string", paramType = "path"),
             @ApiImplicitParam(name = "username", value = "username", defaultValue = "u2-0", required = true, dataType = "string", paramType = "body")
     })
-    @PostMapping(value = "/requestByRestTemplate/{userId}", produces = "application/json;charset=UTF-8")
+    @PutMapping(value = "/requestByRestTemplate/{userId}", produces = "application/json;charset=UTF-8")
     public String updateUserByRestTemplate(@PathVariable String userId, @RequestBody String username) {
         String endpointUrl = BASE_URL + "/user/users/" + userId;
 
@@ -202,7 +203,7 @@ public class ClientController {
         headers.add("k1", "v1");
 
         HttpEntity<String> entity = new HttpEntity<>(username, headers);
-        ResponseEntity<String> responseEntity = restTemplate.exchange(endpointUrl, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(endpointUrl, HttpMethod.PUT, entity, String.class);
         String resBody = responseEntity.getBody();
         return  resBody;
     }

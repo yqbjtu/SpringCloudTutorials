@@ -9,6 +9,8 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -44,6 +46,19 @@ public class UserController {
     @GetMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
     public User getUser(@PathVariable String userId) {
         User user = (User)userMap.get(userId);
+        return user;
+    }
+
+    @ApiOperation(value = "按用户id修改", notes="private")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "userId", value = "userID", defaultValue = "2", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "username", value = "username", defaultValue = "u2-0", required = true, dataType = "string", paramType = "body")
+    })
+    @PutMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
+    public User updateUser(@PathVariable String userId, @RequestBody String username) {
+        User user = (User)userMap.get(userId);
+        user.setName(username);
+        userMap.put(userId, user);
         return user;
     }
 

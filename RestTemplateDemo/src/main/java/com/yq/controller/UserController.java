@@ -7,11 +7,9 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,7 +55,7 @@ public class UserController {
             @ApiImplicitParam(name = "userId", value = "userID", defaultValue = "2", required = true, dataType = "string", paramType = "path"),
             @ApiImplicitParam(name = "username", value = "username", defaultValue = "u2-0", required = true, dataType = "string", paramType = "body")
     })
-    @PostMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
+    @PutMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
     public User updateUser(@PathVariable String userId, @RequestBody String username) {
         User user = (User)userMap.get(userId);
         user.setName(username);
