@@ -52,12 +52,13 @@ public class UserController {
     @ApiOperation(value = "按用户id修改", notes="private")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userId", value = "userID", defaultValue = "2", required = true, dataType = "string", paramType = "path"),
-            @ApiImplicitParam(name = "username", value = "username", defaultValue = "u2-0", required = true, dataType = "string", paramType = "body")
+            @ApiImplicitParam(name = "user", value = "user", defaultValue = "{\"name\": \"222@163.com\",\n" +
+                    "\"mail\": \"WangWu\",\n" +
+                    "\"regDate\": 1550305127268\"}", required = true, dataType = "User", paramType = "body")
     })
     @PutMapping(value = "/users/{userId}", produces = "application/json;charset=UTF-8")
-    public User updateUser(@PathVariable String userId, @RequestBody String username) {
-        User user = (User)userMap.get(userId);
-        user.setName(username);
+    public User updateUser(@PathVariable String userId, @RequestBody User user) {
+        user.setId(userId);
         userMap.put(userId, user);
         return user;
     }
