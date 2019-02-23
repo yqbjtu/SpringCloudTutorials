@@ -9,6 +9,7 @@
 ### 官方文档<a name="official_docs"></a>
 https://spring.io/guides/gs/messaging-redis/
 
+http://127.0.0.1:8080/swagger-ui.html
 
  
 ### 注意问题<a name="notes_faq"></a>
