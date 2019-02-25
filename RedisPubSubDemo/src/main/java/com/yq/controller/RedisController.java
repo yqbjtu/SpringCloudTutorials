@@ -77,7 +77,7 @@ public class RedisController {
         return jsonObj.toJSONString();
     }
 
-    @ApiOperation(value = "subscribe With RedisPubSubListener", notes="set")
+    @ApiOperation(value = "subscribe With RedisPubSubListener 演示代码没有关闭client和conn", notes="set")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "channel", defaultValue = "channel1", value="channel", required = true, dataType = "string", paramType = "path")
     })
@@ -93,6 +93,8 @@ public class RedisController {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
         jsonObj.put("subscribe", channel);
+        //connection.close();
+        //client.shutdown();
         return jsonObj.toJSONString();
     }
 
@@ -117,10 +119,27 @@ public class RedisController {
 
     @ApiOperation(value = "subscribe pattern", notes="set")
     @ApiImplicitParams({
+            @ApiImplicitParam(name = "pattern", defaultValue = "__keyevent@[0-1]__:set", value="pattern", required = true, dataType = "string", paramType = "path")
+    })
+    @GetMapping(value = "/sub/patternsWithMessageListener/{pattern}", produces = "application/json;charset=UTF-8")
+    public String subPatternWithMessageListener(@PathVariable String pattern) {
+        log.info("connFactory={}, lettuceConnFactory={}", connectionFactory.toString(), lettuceConnectionFactory.toString());
+        RedisConnection redisConnection = lettuceConnectionFactory.getConnection();
+
+        redisConnection.pSubscribe(new MyMessageListener(),pattern.getBytes(StandardCharsets.UTF_8) );
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        jsonObj.put("psubscribe", pattern);
+        return jsonObj.toJSONString();
+    }
+
+    @ApiOperation(value = "subscribe pattern", notes="set")
+    @ApiImplicitParams({
             @ApiImplicitParam(name = "pattern", defaultValue = "__keyevent@[0-1]__:expired", value="pattern", required = true, dataType = "string", paramType = "path")
     })
     @GetMapping(value = "/patterns/{pattern}", produces = "application/json;charset=UTF-8")
-    public String getUser(@PathVariable String pattern) {
+    public String subPattern(@PathVariable String pattern) {
 
         RedisClient client = RedisClient.create("redis://127.0.0.1");
         StatefulRedisPubSubConnection<String, String> connection = client.connectPubSub();

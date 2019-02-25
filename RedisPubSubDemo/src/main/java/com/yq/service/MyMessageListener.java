@@ -18,6 +18,8 @@ public class MyMessageListener implements MessageListener {
     public void onMessage(Message message, @Nullable byte[] pattern) {
         byte[] bytesBody = message.getBody();
         byte[] bytesChannel = message.getChannel();
+        String patternStr = pattern != null? new String(bytesChannel): null;
+        //msgBody=qq, channel=__keyevent@1__:expired
         log.info("msgBody={}, channel={}, pattern={}",  bytesBody!=null? new String(bytesBody): null, bytesChannel!=null? new String(bytesChannel): null, pattern);
     }
 }
