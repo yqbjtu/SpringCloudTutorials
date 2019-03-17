@@ -42,6 +42,7 @@ import reactor.core.scheduler.Schedulers;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -73,10 +74,10 @@ public class ClientController {
     private final String BASE_URL = "https://localhost:9901";
 
     public ClientController() {
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setDefaultMaxPerRoute(1000);
-        connectionManager.setMaxTotal(1000);
-        this.restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory( HttpClientBuilder.create().setConnectionManager(connectionManager).build() ));
+//        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+//        connectionManager.setDefaultMaxPerRoute(1000);
+//        connectionManager.setMaxTotal(1000);
+//        this.restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory( HttpClientBuilder.create().setConnectionManager(connectionManager).build() ));
 
         CloseableHttpClient httpClient = null;
         HttpComponentsClientHttpRequestFactory httpComponentsClientHttpRequestFactory = null;
@@ -86,10 +87,10 @@ public class ClientController {
         } catch (Exception e) {
             log.error("exception",e);
         }
-        if(httpClient != null){
+        if (httpClient != null){
             httpComponentsClientHttpRequestFactory =new HttpComponentsClientHttpRequestFactory(httpClient);
         }
-        if(httpComponentsClientHttpRequestFactory != null){
+        if (httpComponentsClientHttpRequestFactory != null){
             this.restTemplate = new RestTemplate(httpComponentsClientHttpRequestFactory);
         }
 
@@ -133,6 +134,7 @@ public class ClientController {
         try {
             this.eventLoopGroup = new NioEventLoopGroup();
             Netty4ClientHttpRequestFactory nettyFactory = new Netty4ClientHttpRequestFactory(this.eventLoopGroup);
+
             nettyFactory.setSslContext(SslContextBuilder.forClient().build());
             httpClient = new AsyncRestTemplate(nettyFactory);
         } catch (SSLException e) {

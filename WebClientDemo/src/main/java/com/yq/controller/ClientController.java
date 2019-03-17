@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -85,21 +86,32 @@ public class ClientController {
 //                        clientResponse -> clientResponse.bodyToMono(User.class) );
 
 
-        Mono<User> mono = webClient
-                .put()
-                .uri("/user/users/" + userId)
-                .headers(httpHeaders -> {
-                    httpHeaders.add("h1", "v1");
-                    httpHeaders.add("h2","v2");
-                })
-                .body(Mono.just(user), User.class)
-                .retrieve()
-                .bodyToMono(User.class);
+//        Mono<User> mono = webClient
+//                .put()
+//                .uri("/user/users/" + userId)
+//                .headers(httpHeaders -> {
+//                    httpHeaders.add("h1", "v1");
+//                    httpHeaders.add("h2","v2");
+//                })
+//                .body(Mono.just(user), User.class)
+//                .retrieve()
+//                .bodyToMono(User.class);
 
-        return mono;
+
 //        return webClient.put().uri("/user/users/{userId}", userId)
 //                .body(BodyInserters.fromObject(user))
-//                .exchange().flatMap(clientResponse -> clientResponse.bodyToMono(User.class));
+//                .exchange().flatMap(clientResponse -> {
+//                    if (clientResponse.statusCode()== HttpStatus.OK) {
+//                        return clientResponse.bodyToMono(User.class);
+//                    }
+//                    else {
+//                        return Mono.just("error"+ clientResponse.headers());
+//                    }
+//                });
 
+
+        return webClient.put().uri("/user/users/{userId}", userId)
+                .body(BodyInserters.fromObject(user))
+                .exchange().flatMap(clientResponse -> clientResponse.bodyToMono(User.class));
     }
 }
