@@ -63,4 +63,16 @@ public class UserController {
         return user;
     }
 
+
+    @ApiOperation(value = "创建key value 服务间调用")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "key", value = "name1", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "value", value = "value01", required = true, dataType = "string", paramType = "query")
+    })
+    @PostMapping(value = "/keys/{key}", produces = "text/json;charset=UTF-8")
+    public String setKey2(@PathVariable String key, @RequestParam String value) {
+        String keyInfo = userServiceClient.setKey(key, value);
+        return keyInfo;
+    }
+
 }

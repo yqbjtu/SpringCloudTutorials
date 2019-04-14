@@ -1,5 +1,6 @@
 package com.yq.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.yq.domain.User;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -83,5 +84,19 @@ public class UserController {
     public Iterable<User> findAllUsers() {
         Collection<User> users = userMap.values();
         return users;
+    }
+
+    @ApiOperation(value = "创建key value ,测试produces写错的情况，text/json是不争取的")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "key", value = "name1", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "value", value = "value01", required = true, dataType = "string", paramType = "query")
+    })
+    @PostMapping(value = "/keys/{key}", produces = "text/json;charset=UTF-8")
+    public String setKey2(@PathVariable String key, @RequestParam String value) {
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("key", key);
+        jsonObj.put("value", value);
+        return jsonObj.toJSONString();
     }
 }

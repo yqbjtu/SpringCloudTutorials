@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.alibaba.fastjson.JSONObject;
 
 @RestController
 @RequestMapping("/cache")
@@ -40,7 +41,11 @@ public class RedisController {
     @GetMapping(value = "/keys/{key}", produces = "application/json;charset=UTF-8")
     public String getKey(@PathVariable String key) {
         String value = redisService.get(key);
-        return value;
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("key", key);
+        jsonObj.put("value", value);
+        return jsonObj.toJSONString();
     }
 
     @ApiOperation(value = "删除key。 不支持匹配", notes="del")
@@ -50,6 +55,9 @@ public class RedisController {
     @DeleteMapping(value = "/keys", produces = "application/json;charset=UTF-8")
     public Boolean delKey(@RequestParam String key) {
         Boolean value = redisService.del(key);
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("keyDel", value);
         return value;
     }
 
@@ -60,6 +68,9 @@ public class RedisController {
     @DeleteMapping(value = "/keysPattern", produces = "application/json;charset=UTF-8")
     public Integer delByPattern(@RequestParam String keyPattern) {
         int count = redisService.delByPattern(keyPattern);
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("keyPatternDel", count);
         return count;
     }
 
@@ -73,6 +84,10 @@ public class RedisController {
 
         redisService.set(key, value);
         value = redisService.get(key);
-        return value;
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("key", value);
+        return jsonObj.toJSONString();
     }
+
 }

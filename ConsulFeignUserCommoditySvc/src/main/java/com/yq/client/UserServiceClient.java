@@ -26,6 +26,9 @@ public interface UserServiceClient {
 
     @RequestMapping(value="/v1/users", method= RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String createUser();
+
+    @RequestMapping(value="/v1/keys/{key}", method= RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public String setKey(@PathVariable(value = "key") String key, @RequestParam("value") String value);
 }
 
 @Component
@@ -54,6 +57,12 @@ class UserServiceFallbackFactory implements FallbackFactory<UserServiceClient> {
 
             @Override
             public String createUser() {
+                log.warn("Fallback reason={}", throwable.getMessage());
+                return "SvcCall Error3";
+            }
+
+            @Override
+            public String setKey(String key, String value) {
                 log.warn("Fallback reason={}", throwable.getMessage());
                 return "SvcCall Error3";
             }
