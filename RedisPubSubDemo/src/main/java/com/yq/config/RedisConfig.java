@@ -3,9 +3,11 @@ package com.yq.config;
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 
 /**
@@ -16,6 +18,8 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
  * @version 2019/2/23 12:32
  */
 @Configuration
+@Data
+@Order(1)
 public class RedisConfig {
 
     @Value("${spring.redis.host}")

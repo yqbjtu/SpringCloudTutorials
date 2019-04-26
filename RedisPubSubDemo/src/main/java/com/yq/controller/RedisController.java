@@ -3,6 +3,7 @@
 package com.yq.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.yq.dist.DistLock;
 import com.yq.service.MyMessageListener;
 import com.yq.service.MyRedisPubSubListener;
 import com.yq.service.RedisService;
@@ -14,6 +15,7 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,20 +45,20 @@ import java.util.concurrent.locks.ReentrantLock;
 @RequestMapping("/redis")
 @Slf4j
 public class RedisController {
-    private Logger logger = LoggerFactory.getLogger(RedisController.class);
-
     @Autowired
-    RedisService redisService;
+    private RedisService redisService;
 
     @Autowired
     private StringRedisTemplate template;
 
     @Autowired
-    RedisConnectionFactory connectionFactory;
+    private RedisConnectionFactory connectionFactory;
 
     @Autowired
-    LettuceConnectionFactory lettuceConnectionFactory;
+    private LettuceConnectionFactory lettuceConnectionFactory;
 
+    @Autowired
+    private DistLock distLock;
 
     @ApiOperation(value = "subscribe, 演示代码没有关闭client和conn", notes="set")
     @ApiImplicitParams({
@@ -186,7 +188,7 @@ public class RedisController {
                 public void run() {
                     try {
                         String value = redisService.getHash(key, hashKey);
-                        //logger.info("threadId={}, oldValue={}", Thread.currentThread().getId(), value);
+                        //log.info("threadId={}, oldValue={}", Thread.currentThread().getId(), value);
                         if (StringUtils.isEmpty(value)) {
                             value = "0";
                         }
@@ -194,7 +196,7 @@ public class RedisController {
                         Integer newValue = oldValue + 1;
                         redisService.setHash(key, hashKey, newValue.toString());
                         String againValue = redisService.getHash(key, hashKey);
-                        logger.info("threadId={}, oldValue={}, againValue={}", Thread.currentThread().getId(), oldValue, againValue);
+                        log.info("threadId={}, oldValue={}, againValue={}", Thread.currentThread().getId(), oldValue, againValue);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
@@ -205,7 +207,7 @@ public class RedisController {
             try {
                 Thread.sleep(50);
             } catch (Exception ex) {
-                logger.info("sleep exception", ex);
+                log.info("sleep exception", ex);
             }
         };
 
@@ -214,6 +216,66 @@ public class RedisController {
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
         jsonObj.put("value", value);
+        return jsonObj.toJSONString();
+    }
+
+    @ApiOperation(value = "简单的多线程读写，只是为了演示DistLock，所有直接使用new Thread, 如果线程执行时间长，" +
+            "而waitTime小，会导致只有一个线程能在规定时间内获取锁", notes="read write")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "lockKey", defaultValue = "lockKey", value = "lockKey", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "num", defaultValue = "5", value = "次数", required = true, dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "waitTime", defaultValue = "20", value = "获取锁的等待时间", required = true, dataType = "int", paramType = "query"),
+    })
+    @PostMapping(value = "/distLock", produces = "application/json;charset=UTF-8")
+    public String rLockDemo(@RequestParam String lockKey, @RequestParam Integer num,@RequestParam Integer waitTime) {
+        log.info("========");
+        for (int i = 0; i < num; i++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+
+                    long threadId = Thread.currentThread().getId();
+                    RLock rLock = distLock.getRLock(lockKey);
+                    try {
+                        boolean isLock =  rLock.isLocked();
+                        int holdCount = rLock.getHoldCount();
+                        log.info("{} check isLock={}, holdCount={}", threadId, isLock, holdCount);
+                        long startTryLock = System.currentTimeMillis();
+                        boolean isGotten = rLock.tryLock(waitTime, 30, TimeUnit.SECONDS);
+                        long endTryLock = System.currentTimeMillis();
+                        if (isGotten) {
+                            log.info("threadId={} does get the lock. cost={}", threadId, (endTryLock- startTryLock)/1000);
+                            long start = System.currentTimeMillis();
+                            try {
+                                Thread.sleep(20 * 1000);
+                            } catch (Exception ex) {
+                                log.info("{} sleep exception", threadId, ex);
+                            }
+                            long end = System.currentTimeMillis();
+                            log.info("threadId={} exec. hold time={}. done", threadId, (end - start)/1000);
+                        }
+                        else {
+                            log.info("threadId={} does not get the lock.cost={}", threadId, (endTryLock- startTryLock)/1000);
+                        }
+                    } catch (Exception e) {
+                        log.error("{} exception.", threadId, e);
+                    } finally {
+                        rLock.forceUnlock();
+                    }
+                }
+            }, "thread-" + i).start();
+            //为了确保别的线程修改后新线程能读取，加上间隔时间
+            try {
+                Thread.sleep(50);
+            } catch (Exception ex) {
+                log.info("sleep exception", ex);
+            }
+        };
+
+
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
         return jsonObj.toJSONString();
     }
 
@@ -256,7 +318,7 @@ public class RedisController {
                     try {
                         lock.lock();
                         String value = redisService.getHash(key, hashKey);
-                        //logger.info("threadId={}, oldValue={}", Thread.currentThread().getId(), value);
+                        //log.info("threadId={}, oldValue={}", Thread.currentThread().getId(), value);
                         if (StringUtils.isEmpty(value)) {
                             value = "0";
                         }
@@ -264,9 +326,9 @@ public class RedisController {
                         Integer newValue = oldValue + 1;
                         redisService.setHash(key, hashKey, newValue.toString());
                         String againValue = redisService.getHash(key, hashKey);
-                        logger.info("threadId={}, oldValue={}, againValue={}", Thread.currentThread().getId(), oldValue, againValue);
+                        log.info("threadId={}, oldValue={}, againValue={}", Thread.currentThread().getId(), oldValue, againValue);
                     } catch (Exception e) {
-                        logger.error("Exception. ", e);
+                        log.error("Exception. ", e);
                     } finally {
                         lock.unlock();
                     }
@@ -277,7 +339,7 @@ public class RedisController {
                 int sleepRandom = random.nextInt(200);
                 Thread.sleep(sleepRandom);
             } catch (Exception ex) {
-                logger.info("sleep exception", ex);
+                log.info("sleep exception", ex);
             }
 
             ruleExecutor.submit(myRunnable);
