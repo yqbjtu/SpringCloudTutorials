@@ -48,6 +48,21 @@ public class RedisController {
         return jsonObj.toJSONString();
     }
 
+    @ApiOperation(value = "设置key", notes="set")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "key", value = "name1", defaultValue = "abc", required = true, dataType = "string", paramType = "path"),
+            @ApiImplicitParam(name = "hkey", value = "hkey", defaultValue = "hkey1",required = true, dataType = "string", paramType = "query")
+    })
+    @GetMapping(value = "/hkeys/{key}", produces = "application/json;charset=UTF-8")
+    public String getHash(@PathVariable String key, @RequestParam String hkey) {
+        String value = redisService.getHash(key, hkey);
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("key", key);
+        jsonObj.put("value", value);
+        return jsonObj.toJSONString();
+    }
+
     @ApiOperation(value = "删除key。 不支持匹配", notes="del")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "key", value = "name1, 放在path中太长会被截断", required = true, dataType = "string", paramType = "query")
