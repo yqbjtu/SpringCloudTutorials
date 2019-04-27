@@ -45,13 +45,13 @@ public class MyZuulFilter extends ZuulFilter {
         Object accessToken = request.getParameter("token");
         if(accessToken == null) {
             log.warn("token is empty");
-            ctx.setSendZuulResponse(false);
-            ctx.setResponseStatusCode(401);
-            try {
-                ctx.getResponse().getWriter().write("token is empty");
-            }catch (Exception e){}
-
-            return null;
+//            ctx.setSendZuulResponse(false);
+//            ctx.setResponseStatusCode(401);
+//            try {
+//                ctx.getResponse().getWriter().write("token is empty");
+//            }catch (Exception e){}
+//
+//            return null;
         }
 
         log.info("ok");

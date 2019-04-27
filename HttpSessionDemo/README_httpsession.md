@@ -6,6 +6,7 @@
 > [注意问题](#notes_faq)
 >
 
+http://127.0.0.1
 ### 官方文档<a name="official_docs"></a>
 https://docs.spring.io/spring-session/docs/current/reference/html5/guides/java-redis.html  
 
