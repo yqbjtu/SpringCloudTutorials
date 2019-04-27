@@ -267,4 +267,30 @@ http://127.0.0.1:7009/user/feign2users/2?sleepTimeMillis=9000
 
 
 
-    
+### 当所有服务都在线，zuul的ribbon readtimeout小于hystrix-user-service自身的ribbon.ReadTimeout
+同样的参数
+http://127.0.0.1:7700/huserapi/user/feign2users/2?sleepTimeMillis=6000
+
+网关日志
+2019-04-27 23:23:42,613 ERROR [DESKTOP-8S2E5H7 http-nio-7700-exec-4] Caller+0	 at com.yq.filter.MyFallBackProvider.fallbackResponse(MyFallBackProvider.java:28)
+zuul exception, msg=null
+com.netflix.client.ClientException: null
+	at com.netflix.client.AbstractLoadBalancerAwareClient.executeWithLoadBalancer(AbstractLoadBalancerAwareClient.java:118)
+Caused by: java.lang.RuntimeException: java.net.SocketTimeoutException: Read timed out
+http返回值
+Status Code: 503 
+fallback. service:hystrix-user-service, status:Service Unavailable
+
+如果直接调用hystrix-user-service
+http://127.0.0.1:7009/user/feign2users/2?sleepTimeMillis=6000
+
+返回http 200，
+{
+  "result": "Read timed out executing GET http://user-service/v1/usersWithSleep/2?sleepTimeMillis=6000, 8679"
+}
+
+ 服务日志
+ 2019-04-27 23:23:22.348 ERROR 23584 --- [nio-7009-exec-7] com.yq.controller.UserController         : cost=8679, exception
+ 
+ feign.RetryableException: Read timed out executing GET http://user-service/v1/usersWithSleep/2?sleepTimeMillis=6000
+ 	at feign.FeignException.errorExecuting(FeignException.java:67) ~[feign-core-9.5.1.jar:na]
