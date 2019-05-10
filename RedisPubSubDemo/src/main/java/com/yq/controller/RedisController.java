@@ -16,6 +16,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
+import org.redisson.api.RMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -279,6 +280,24 @@ public class RedisController {
         return jsonObj.toJSONString();
     }
 
+    @ApiOperation(value = "简单的多线程读写，只是为了演示DistLock，所有直接使用thread pool, 如果线程执行时间长，" +
+            "而waitTime小，会导致只有一个线程能在规定时间内获取锁", notes="read write")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "lockKey", defaultValue = "lockKey", value = "lockKey", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "num", defaultValue = "5", value = "次数", required = true, dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "waitTime", defaultValue = "20", value = "获取锁的等待时间", required = true, dataType = "int", paramType = "query"),
+    })
+    @PostMapping(value = "/distLockInPool", produces = "application/json;charset=UTF-8")
+    public String rLockDemoInPool(@RequestParam String lockKey, @RequestParam Integer num, @RequestParam Integer waitTime) {
+        log.info("========");
+        testDistLockInThreadPool(lockKey, num, waitTime);
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        return jsonObj.toJSONString();
+    }
+
+
     @ApiOperation(value = "多线程读写 by pool", notes="read write")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "num", defaultValue = "8", value = "5", required = true, dataType = "int", paramType = "path"),
@@ -344,5 +363,82 @@ public class RedisController {
 
             ruleExecutor.submit(myRunnable);
         }
+    }
+
+    private void testDistLockInThreadPool(String lockKey, @RequestParam Integer num, @RequestParam Integer waitTime) {
+        ThreadPoolExecutor ruleExecutor = new ThreadPoolExecutor(
+                4,             /* minimum (core) thread count */
+                8,        /* maximum thread count */
+                Long.MAX_VALUE, /* timeout */
+                TimeUnit.NANOSECONDS,
+                new LinkedBlockingQueue<Runnable>(),
+                new ThreadPoolExecutor.DiscardOldestPolicy());
+
+        Random random = new Random();
+        Lock lock = new ReentrantLock();
+        for(int i=0; i< num; i++) {
+            Runnable myRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    long threadId = Thread.currentThread().getId();
+                    RLock rLock = distLock.getRLock(lockKey);
+                    try {
+                        boolean isLock =  rLock.isLocked();
+                        int holdCount = rLock.getHoldCount();
+                        log.info("{} check isLock={}, holdCount={}", threadId, isLock, holdCount);
+                        long startTryLock = System.currentTimeMillis();
+                        boolean isGotten = rLock.tryLock(waitTime, 30, TimeUnit.SECONDS);
+                        long endTryLock = System.currentTimeMillis();
+                        if (isGotten) {
+                            log.info("threadId={} does get the lock. cost={}", threadId, (endTryLock- startTryLock)/1000);
+                            long start = System.currentTimeMillis();
+                            try {
+                                Thread.sleep(20 * 1000);
+                            } catch (Exception ex) {
+                                log.info("{} sleep exception", threadId, ex);
+                            }
+                            long end = System.currentTimeMillis();
+                            log.info("threadId={} exec. hold time={}. done", threadId, (end - start)/1000);
+                        }
+                        else {
+                            log.info("threadId={} does not get the lock.cost={}", threadId, (endTryLock- startTryLock)/1000);
+                        }
+                    } catch (Exception e) {
+                        log.error("{} exception.", threadId, e);
+                    } finally {
+                        rLock.forceUnlock();
+                    }
+                }
+            };
+
+            ruleExecutor.submit(myRunnable);
+        }
+    }
+
+    @ApiOperation(value = "简单的多线程读写，只是为了演示DistMap，所有直接使用new Thread, 如果线程执行时间长", notes="read write")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "mapKey", defaultValue = "mapKey", value = "mapKey", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "num", defaultValue = "5", value = "次数", required = true, dataType = "int", paramType = "query")
+    })
+    @PostMapping(value = "/distMap", produces = "application/json;charset=UTF-8")
+    public String rMapDemo(@RequestParam String mapKey, @RequestParam Integer num) {
+        log.info("========");
+        for (int i = 0; i < num; i++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    long threadId = Thread.currentThread().getId();
+                    RMap rMap = distLock.getRMap(mapKey);
+                    log.info("before value={}. threadId={}", rMap.get("key1"), threadId);
+                    rMap.put("key1", "v_"+ threadId);
+                    log.info("after value={}. threadId={}", rMap.get("key1"), threadId);
+                    rMap.put("key_"+ threadId, "a_"+ threadId);
+                }
+            }, "thread-" + i).start();
+        };
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        return jsonObj.toJSONString();
     }
 }

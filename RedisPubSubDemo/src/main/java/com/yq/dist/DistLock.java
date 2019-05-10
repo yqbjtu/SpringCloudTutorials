@@ -4,6 +4,7 @@ import com.yq.config.RedisConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RLock;
+import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,10 @@ public class DistLock {
 
     public boolean init() {
         Config config=new Config();
-        config.useSingleServer().setAddress(redisConfig.getRedisHost() + ":" + redisConfig.getRedisPort());
+        config.useSingleServer()
+                .setAddress(redisConfig.getRedisHost() + ":" + redisConfig.getRedisPort());
+        //.setPassword(redisConfig.getPassword());
+
         redisson= Redisson.create(config);
 
         return true;
@@ -45,4 +49,10 @@ public class DistLock {
         RLock rLock = redisson.getLock(objectName);
         return rLock;
     }
+
+    public RMap<String, String> getRMap(String objectName){
+        RMap<String, String>  rMap = redisson.getMap(objectName);
+        return rMap;
+    }
+
 }
