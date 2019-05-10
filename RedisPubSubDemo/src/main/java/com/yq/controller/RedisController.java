@@ -3,6 +3,7 @@
 package com.yq.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.yq.config.ThreadPool;
 import com.yq.dist.DistLock;
 import com.yq.service.MyMessageListener;
 import com.yq.service.MyRedisPubSubListener;
@@ -24,7 +25,10 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -435,6 +441,53 @@ public class RedisController {
                     rMap.put("key_"+ threadId, "a_"+ threadId);
                 }
             }, "thread-" + i).start();
+        };
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        return jsonObj.toJSONString();
+    }
+
+    @Autowired
+    private ThreadPool threadPool;
+    @ApiOperation(value = "简单的多线程读写，只是为了演示DistMap，所有直接使用new Thread, 如果线程执行时间长", notes="read write")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "mapKey", defaultValue = "mapKey", value = "mapKey", required = true, dataType = "string", paramType = "query"),
+            @ApiImplicitParam(name = "num", defaultValue = "5", value = "次数", required = true, dataType = "int", paramType = "query")
+    })
+    @PostMapping(value = "/distMapCallable", produces = "application/json;charset=UTF-8")
+    public String rMapDemoCallable(@RequestParam String mapKey, @RequestParam Integer num) {
+        log.info("========");
+        for (int i = 0; i < num; i++) {
+            Callable<String>  callable = new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    long threadId = Thread.currentThread().getId();
+                    String jobId = "jobId_" + threadId;
+                    log.info("call jobId={}. threadId={}", jobId, threadId);
+                    return jobId;
+                }
+            };
+
+            ListenableFuture listenableFuture = threadPool.getExecutor().submitListenable(callable);
+            listenableFuture.addCallback(new ListenableFutureCallback<String>() {
+                @Override
+                public void onSuccess(@Nullable String result){
+                    long threadId = Thread.currentThread().getId();
+                    String jobId = result;
+                    RMap rMap = distLock.getRMap(mapKey);
+                    log.info("before value={}. threadId={}", rMap.get("key1"), threadId);
+                    rMap.put("key1", result);
+                    rMap.put("key1"+ System.currentTimeMillis(), result);
+                    log.info("after value={}. threadId={}", rMap.get("key1"), threadId);
+                    rMap.put("key_"+ threadId, "a_"+ threadId);
+                }
+
+                @Override
+                public void onFailure(Throwable ex){
+                    log.error("submit acc job callable Failure, , threadId={}", Thread.currentThread().getId(), ex);
+                }
+            });
         };
 
         JSONObject jsonObj = new JSONObject();
