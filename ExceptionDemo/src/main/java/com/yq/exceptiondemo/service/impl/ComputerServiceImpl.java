@@ -13,13 +13,13 @@ import org.springframework.stereotype.Service;
 public class ComputerServiceImpl implements ComputerService {
 
     @Override
-    public int devide(int a, int b) {
+    public int divide(int a, int b) {
         int result = a / b;
         return result;
     }
 
     @Override
-    public int devideCatchExecption(int a, int b) throws ComputerException {
+    public int divideCatchExecption(int a, int b) throws ComputerException {
         int result = 0;
         try {
             result = a / b;

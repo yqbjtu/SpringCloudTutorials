@@ -31,17 +31,17 @@ public class HelloWorldController {
         return ret.toString();
     }
 
-    @SystemLog(description = "devide测试")
+    @SystemLog(description = "divide测试")
     @ApiOperation(value = "hello exception demo, service method will throw native exception", notes = "just for demo")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "a", defaultValue = "10", value = "a", required = true, dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "b", defaultValue = "3", value = "b", required = true, dataType = "int", paramType = "query")
     })
-    @GetMapping(value = "/devide", produces = "text/plain;charset=UTF-8")
+    @GetMapping(value = "/divide", produces = "text/plain;charset=UTF-8")
     public String exceptionDemo(@RequestParam("a") int a, @RequestParam("b") int b) {
-        log.info("Enter exceptionDemo a={} devided by b={}", a, b);
+        log.info("Enter exceptionDemo a={} divided by b={}", a, b);
 
-        int c= computerSvc.devide(a, b);
+        int c = computerSvc.divide(a, b);
 
         ReturnResult ret = new ReturnResult(Constants.QUERY_OK, null);
         ret.setObj(Integer.valueOf(c));
@@ -55,11 +55,11 @@ public class HelloWorldController {
             @ApiImplicitParam(name = "a", defaultValue = "10", value = "a", required = true, dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "b", defaultValue = "0", value = "b", required = true, dataType = "int", paramType = "query")
     })
-    @GetMapping(value = "/devideCatchException", produces = "text/plain;charset=UTF-8")
+    @GetMapping(value = "/divideCatchException", produces = "text/plain;charset=UTF-8")
     public String exceptionCatchDemo(@RequestParam("a") int a, @RequestParam("b") int b) throws ComputerException {
-        log.info("Enter exceptionDemo a={} devided by b={}", a, b);
+        log.info("Enter exceptionDemo a={} divided by b={}", a, b);
 
-        int c= computerSvc.devideCatchExecption(a, b);
+        int c = computerSvc.divideCatchExecption(a, b);
 
         ReturnResult ret = new ReturnResult(Constants.QUERY_OK, null);
         ret.setObj(Integer.valueOf(c));

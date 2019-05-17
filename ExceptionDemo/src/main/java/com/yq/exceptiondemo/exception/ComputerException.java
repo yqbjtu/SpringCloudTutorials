@@ -11,6 +11,6 @@ import lombok.Data;
 public class ComputerException extends BaseException {
 
     public ComputerException(String cause) {
-        super(Constants.DEVIDE_ERROR, cause);
+        super(Constants.DIVIDE_ERROR, cause);
     }
 }

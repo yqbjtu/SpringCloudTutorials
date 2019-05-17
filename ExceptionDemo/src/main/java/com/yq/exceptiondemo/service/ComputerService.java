@@ -10,7 +10,7 @@ import com.yq.exceptiondemo.exception.ComputerException;
 
  */
 public interface ComputerService {
-    int devide(int a, int b);
+    int divide(int a, int b);
 
-    int devideCatchExecption(int a, int b) throws ComputerException;
+    int divideCatchExecption(int a, int b) throws ComputerException;
 }
