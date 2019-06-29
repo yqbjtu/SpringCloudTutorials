@@ -44,7 +44,7 @@ public class DistLock {
         redisson= Redisson.create(config);
 
         RedissonNodeConfig nodeConfig = new RedissonNodeConfig(config);
-        nodeConfig.setExecutorServiceWorkers(Collections.singletonMap("myExecutor2", 5));
+        nodeConfig.setExecutorServiceWorkers(Collections.singletonMap("myExecutor", 5));
         RedissonNode node = RedissonNode.create(nodeConfig);
         node.start();
 

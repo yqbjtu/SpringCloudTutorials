@@ -16,6 +16,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.Future;
+
 /**
  * Simple to Introduction
  * className: RedisServiceImpl
@@ -54,6 +56,23 @@ public class RedisServiceImpl implements RedisService {
 
         executorService.submit(new RunnableTask(100));
 
+    }
+
+    @Override
+    public Future StartRunnable() {
+        Config config=new Config();
+//        config.useSingleServer()
+//                .setAddress(redisConfig.getRedisHost() + ":" + redisConfig.getRedisPort());
+        //.setPassword(redisConfig.getPassword());
+        config.useSingleServer()
+                .setAddress("127.0.0.1:6379");
+
+        RedissonClient redisson = Redisson.create(config);
+
+        RExecutorService executorService = redisson.getExecutorService("myExecutor");
+        Future future = executorService.submit(new RunnableTask(100));
+
+        return future;
     }
 
 

@@ -2,6 +2,8 @@ package com.yq.service;
 
 import org.redisson.api.RMap;
 
+import java.util.concurrent.Future;
+
 /**
  * Simple to Introduction
  * className: RedisService
@@ -10,7 +12,7 @@ import org.redisson.api.RMap;
  * @version 2018/8/4 23:00
  */
 public interface RedisService {
-
+    Future StartRunnable();
     RMap getMap(String key);
     RMap mapAddEntry(String key, String value) ;
     String mapDelEntry(String key);
