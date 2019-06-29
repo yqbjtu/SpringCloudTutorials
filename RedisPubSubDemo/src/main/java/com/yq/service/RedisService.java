@@ -1,5 +1,7 @@
 package com.yq.service;
 
+import org.redisson.api.RMap;
+
 /**
  * Simple to Introduction
  * className: RedisService
@@ -8,6 +10,10 @@ package com.yq.service;
  * @version 2018/8/4 23:00
  */
 public interface RedisService {
+
+    RMap getMap(String key);
+    RMap mapAddEntry(String key, String value) ;
+    String mapDelEntry(String key);
     String get(String key);
     void set(String key, String value);
     String getHash(String key, String hashKey);
