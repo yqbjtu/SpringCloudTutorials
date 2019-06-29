@@ -3,13 +3,18 @@ package com.yq.dist;
 import com.yq.config.RedisConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
+import org.redisson.RedissonNode;
+import org.redisson.api.RExecutorService;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.config.RedissonNodeConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 
 /**
  * Simple to Introduction
@@ -38,6 +43,11 @@ public class DistLock {
 
         redisson= Redisson.create(config);
 
+        RedissonNodeConfig nodeConfig = new RedissonNodeConfig(config);
+        nodeConfig.setExecutorServiceWorkers(Collections.singletonMap("myExecutor2", 5));
+        RedissonNode node = RedissonNode.create(nodeConfig);
+        node.start();
+
         return true;
     }
     /**
@@ -51,8 +61,12 @@ public class DistLock {
     }
 
     public RMap<String, String> getRMap(String objectName){
-        RMap<String, String>  rMap = redisson.getMap(objectName);
+        RMap<String, String> rMap = redisson.getMap(objectName);
         return rMap;
     }
 
+    public RExecutorService getRExecutorService(){
+        RExecutorService  rExecutorService = redisson.getExecutorService("myExecutor");
+        return rExecutorService;
+    }
 }

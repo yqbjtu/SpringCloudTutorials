@@ -53,6 +53,7 @@ public class RedisServiceImpl implements RedisService {
         map = redisson.getMap("key1");
 
         executorService.submit(new RunnableTask(100));
+
     }
 
 

@@ -54,7 +54,7 @@ public class RedisMapController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "mapKey", defaultValue = "mapKey", value="channel", required = true, dataType = "string", paramType = "path")
     })
-    @GetMapping(value = "/maps", produces = "application/json;charset=UTF-8")
+    @GetMapping(value = "/maps/{mapKey}", produces = "application/json;charset=UTF-8")
     public String subscribeChannel(@PathVariable String mapKey) {
         RMap map = redisService.getMap(mapKey);
 
