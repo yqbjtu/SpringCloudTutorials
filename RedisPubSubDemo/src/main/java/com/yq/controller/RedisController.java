@@ -3,6 +3,7 @@
 package com.yq.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.yq.callable.MyCallable;
 import com.yq.config.ThreadPool;
 import com.yq.dist.DistLock;
 import com.yq.service.MyMessageListener;
@@ -16,8 +17,10 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RExecutorService;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
+import org.redisson.api.RScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -492,6 +496,34 @@ public class RedisController {
 
         JSONObject jsonObj = new JSONObject();
         jsonObj.put("currentTime", LocalDateTime.now().toString());
+        return jsonObj.toJSONString();
+    }
+
+
+    @ApiOperation(value = "分布式 executor service", notes="read write")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "num", defaultValue = "20", value = "秒", required = true, dataType = "int", paramType = "query")
+    })
+    @PostMapping(value = "/distExecSvc", produces = "application/json;charset=UTF-8")
+    public String distExecutorService(@RequestParam Integer num) {
+        log.info("========");
+
+        MyCallable callable = new MyCallable(num);
+
+        RExecutorService executorService = distLock.getRExecutorService();
+        Future<String> future = executorService.submit(callable);
+
+        //RScheduledExecutorService e = distLock.getRExecutorService();
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("currentTime", LocalDateTime.now().toString());
+        try {
+            jsonObj.put("futureResult", future.get());
+        }
+        catch (Exception ex){
+            log.warn("get future result exception", ex);
+        }
+
         return jsonObj.toJSONString();
     }
 }
