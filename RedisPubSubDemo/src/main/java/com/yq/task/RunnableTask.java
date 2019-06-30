@@ -1,5 +1,6 @@
 package com.yq.task;
 
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.Redisson;
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RedissonClient;
@@ -8,6 +9,7 @@ import org.redisson.config.Config;
 /**
  * Created by yangqian on 2019/6/29.
  */
+@Slf4j
 public class RunnableTask implements Runnable {
 
     private long param;
@@ -29,6 +31,7 @@ public class RunnableTask implements Runnable {
         RedissonClient redisson = Redisson.create(config);
         RAtomicLong atomic = redisson.getAtomicLong("myAtomic");
         atomic.addAndGet(param);
+        log.info("threadId={}, atomic={}", Thread.currentThread().getId(), atomic.get());
     }
 
 }
