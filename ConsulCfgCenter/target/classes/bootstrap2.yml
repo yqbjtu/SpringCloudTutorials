@@ -1,0 +1,25 @@
+
+spring:
+  application:
+    name: user-service
+  cloud:
+    consul:
+      port: 8500
+      host: 127.0.0.1
+      config:
+        enabled: true
+        format: properties
+        defaultContext: application
+        profileSeparator: ','
+        watch:
+          enabled: true
+          delay: 10000
+      discovery:
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        enabled: true
+        queryPassing: true
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${server.port}:${random.int}
+  profiles:
+    active: dev
