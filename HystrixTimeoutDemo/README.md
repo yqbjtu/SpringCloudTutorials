@@ -294,3 +294,26 @@ http://127.0.0.1:7009/user/feign2users/2?sleepTimeMillis=6000
  
  feign.RetryableException: Read timed out executing GET http://user-service/v1/usersWithSleep/2?sleepTimeMillis=6000
  	at feign.FeignException.errorExecuting(FeignException.java:67) ~[feign-core-9.5.1.jar:na]
+ 	
+ 	
+###
+ 	同样的参数
+    http://127.0.0.1:7700/huserapi/user/feign2users/2?sleepTimeMillis=5900 （6000接近配置的极限，通过网关访问就会返回503）
+    
+    http://127.0.0.1:7009/user/feign2users/2?sleepTimeMillis=5900
+ 	网关配置为
+ 	hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=70000
+    ribbon.ConnectTimeout=60000
+    ribbon.ReadTimeout=6100
+ 	
+ 	服务自身配置为
+ 	hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=5000
+    ribbon.ConnectTimeout=30000
+    ribbon.ReadTimeout=3000
+    hystrix.command.user-service.execution.isolation.thread.timeoutInMilliseconds=3500
+    
+    因为网关大于服务的2倍，一次通过网关也可以正常得到http 200
+    
+    将网关调整为ribbon.ReadTimeout=5900， 就不行，http就是503
+    http://127.0.0.1:7700/huserapi/user/feign2users/2?sleepTimeMillis=3000， 服务自身的超时是ribbon.ReadTimeout=6100
+    它的sleep时间时3000，综合响应时间超过了5900

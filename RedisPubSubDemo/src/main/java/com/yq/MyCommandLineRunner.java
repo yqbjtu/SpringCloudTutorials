@@ -2,6 +2,10 @@ package com.yq;
 
 
 import com.yq.dist.DistLock;
+import com.yq.service.MyRedisPubSubListener;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import io.lettuce.core.pubsub.api.async.RedisPubSubAsyncCommands;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -29,5 +33,12 @@ public class MyCommandLineRunner implements CommandLineRunner {
         log.info("MyCommandLineRunner初始化 distLock={}", distLock);
 
         distLock.init();
+
+        RedisClient client = RedisClient.create("redis://127.0.0.1");
+        StatefulRedisPubSubConnection<String, String> connection = client.connectPubSub();
+        connection.addListener(new MyRedisPubSubListener());
+
+        RedisPubSubAsyncCommands<String, String> async = connection.async();
+        async.subscribe("topic1");
     }
 }
